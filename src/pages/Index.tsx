@@ -1,93 +1,85 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { initTelegram } from '@/lib/telegram';
-import { Card } from '@/components/ui/card';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Gamepad2, Users } from 'lucide-react';
 import seasonLogo from '@/assets/season-logo.jpg';
+import LoadingScreen from '@/components/LoadingScreen';
 
 export default function Index() {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     initTelegram();
   }, []);
 
-  const matches = [
-    {
-      id: 1,
-      homeTeam: 'Команда A',
-      awayTeam: 'Команда B',
-      date: '25 Октября',
-      time: '19:00',
-      venue: 'Арена Север',
-      status: 'Скоро'
-    },
-    {
-      id: 2,
-      homeTeam: 'Команда C',
-      awayTeam: 'Команда D',
-      date: '26 Октября',
-      time: '20:00',
-      venue: 'Арена Юг',
-      status: 'Скоро'
-    },
-    {
-      id: 3,
-      homeTeam: 'Команда E',
-      awayTeam: 'Команда F',
-      date: '27 Октября',
-      time: '18:30',
-      venue: 'Центральная арена',
-      status: 'Скоро'
-    }
-  ];
+  if (isLoading) {
+    return <LoadingScreen onLoadComplete={() => setIsLoading(false)} />;
+  }
 
   return (
-    <div className="min-h-screen pb-20 px-4">
-      <header className="py-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Media Basket</h1>
-          <p className="text-sm text-muted-foreground">Сезон 6 • Осень 2025</p>
-        </div>
-      </header>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Фоновые эффекты */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.8))]" />
 
-      <div className="mb-8">
-        <img 
-          src={seasonLogo} 
-          alt="2K25 Сезон 6" 
-          className="w-full rounded-2xl shadow-xl"
-        />
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Расписание игр</h2>
-          <span className="text-sm text-primary font-medium">{matches.length} матча</span>
+      {/* Контент */}
+      <div className="relative z-10 text-center space-y-8 max-w-lg w-full">
+        {/* Логотип */}
+        <div className="relative">
+          <div className="absolute inset-0 blur-3xl opacity-40 bg-primary rounded-full" />
+          <img 
+            src={seasonLogo} 
+            alt="Media Basket" 
+            className="w-48 h-48 object-contain mx-auto relative z-10 rounded-2xl shadow-2xl border-4 border-primary"
+          />
         </div>
 
-        <div className="space-y-4">
-          {matches.map((match) => (
-            <Card key={match.id} className="p-4 bg-card/80 backdrop-blur border-border hover:border-primary/50 transition-all">
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-bold text-lg">{match.homeTeam} vs {match.awayTeam}</h3>
-                <span className="text-xs text-primary font-medium px-2 py-1 bg-primary/10 rounded-full">
-                  {match.status}
-                </span>
-              </div>
-              
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>{match.date}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  <span>{match.time}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>{match.venue}</span>
-                </div>
-              </div>
-            </Card>
-          ))}
+        {/* Название */}
+        <div className="space-y-3">
+          <h1 className="text-6xl font-bold neon-text tracking-tight">
+            MEDIA BASKET
+          </h1>
+          <p className="text-primary text-2xl font-semibold tracking-wider">
+            ЛИГА СТАВОК
+          </p>
+          <p className="text-muted-foreground text-lg">
+            Сезон 6 • Осень 2025
+          </p>
+        </div>
+
+        {/* Кнопки */}
+        <div className="space-y-4 pt-8">
+          <Button
+            size="lg"
+            onClick={() => navigate('/game')}
+            className="w-full h-16 text-xl font-bold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-black border-2 border-primary shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all hover:shadow-[0_0_50px_rgba(34,197,94,0.7)]"
+          >
+            <Gamepad2 className="w-8 h-8 mr-3" />
+            ИГРАТЬ
+          </Button>
+
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate('/dating')}
+            className="w-full h-16 text-xl font-bold border-2 border-primary text-primary hover:bg-primary hover:text-black transition-all"
+          >
+            <Users className="w-8 h-8 mr-3" />
+            ЗНАКОМСТВА
+          </Button>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-8 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Telegram Mini App
+          </p>
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>Powered by</span>
+            <span className="text-primary font-semibold">ASIA-ST71</span>
+          </div>
         </div>
       </div>
     </div>
