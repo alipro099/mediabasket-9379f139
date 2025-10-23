@@ -2,98 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+:root {
+  --background: 220 15% 8%;
+  --foreground: 0 0% 98%;
+  --card: 220 15% 12%;
+  --card-foreground: 0 0% 98%;
+  --popover: 220 15% 12%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 142 76% 36%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 15% 20%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 220 15% 25%;
+  --muted-foreground: 0 0% 70%;
+  --accent: 142 76% 36%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 220 15% 20%;
+  --input: 220 15% 20%;
+  --ring: 142 76% 36%;
+  --radius: 0.75rem;
+  --chart-1: 142 76% 36%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 173 58% 39%;
+  --chart-4: 197 37% 24%;
+  --chart-5: 220 15% 20%;
+}
 
-@layer base {
-  :root {
-    /* Баскетбольная тема: оранжевый, темно-синий, градиенты */
-    --background: 220 15% 8%;
-    --foreground: 0 0% 98%;
+* {
+  border-color: hsl(var(--border));
+}
 
-    --card: 220 15% 12%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 220 15% 10%;
-    --popover-foreground: 0 0% 98%;
-
-    /* Яркий оранжевый — основной цвет баскетбола */
-    --primary: 25 95% 55%;
-    --primary-foreground: 220 15% 8%;
-    --primary-glow: 25 100% 65%;
-
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 220 15% 15%;
-    --muted-foreground: 0 0% 65%;
-
-    /* Акцентный цвет — голубой для контраста */
-    --accent: 200 90% 50%;
-    --accent-foreground: 220 15% 8%;
-
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 15% 20%;
-    --input: 220 15% 18%;
-    --ring: 25 95% 55%;
-
-    --radius: 0.75rem;
-
-    /* Градиенты для спортивного стиля */
-    --gradient-primary: linear-gradient(135deg, hsl(25 95% 55%), hsl(25 100% 65%));
-    --gradient-card: linear-gradient(135deg, hsl(220 15% 12%), hsl(220 15% 16%));
-    --gradient-hero: linear-gradient(180deg, hsl(220 15% 8%), hsl(220 15% 12%));
-    
-    /* Тени с цветным свечением */
-    --shadow-primary: 0 10px 40px -10px hsl(25 95% 55% / 0.4);
-    --shadow-card: 0 4px 20px -4px hsl(220 15% 5% / 0.5);
-    
-    /* Анимации */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  }
-
-  .dark {
-    /* То же самое для темной темы (уже темная по умолчанию) */
-    --background: 220 15% 8%;
-    --foreground: 0 0% 98%;
-
-    --card: 220 15% 12%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 220 15% 10%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 25 95% 55%;
-    --primary-foreground: 220 15% 8%;
-
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 220 15% 15%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 200 90% 50%;
-    --accent-foreground: 220 15% 8%;
-
-    --destructive: 0 85% 60%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 220 15% 20%;
-    --input: 220 15% 18%;
-    --ring: 25 95% 55%;
-  }
+body {
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 15% 6%) 100%);
+  color: hsl(var(--foreground));
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }

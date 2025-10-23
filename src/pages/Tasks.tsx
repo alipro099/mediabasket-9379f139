@@ -1,133 +1,139 @@
-import { CheckCircle2, Youtube, Instagram, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { WalletBadge } from '@/components/WalletBadge';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { hapticFeedback } from '@/lib/telegram';
 import { toast } from 'sonner';
 
-const tasks = [
-  {
-    id: 1,
-    title: 'Подпишись на YouTube канал',
-    icon: Youtube,
-    reward: 100,
-    type: 'follow',
-    completed: false,
-  },
-  {
-    id: 2,
-    title: 'Подпишись в Instagram',
-    icon: Instagram,
-    reward: 100,
-    type: 'follow',
-    completed: false,
-  },
-  {
-    id: 3,
-    title: 'Посмотри трансляцию матча',
-    icon: ExternalLink,
-    reward: 200,
-    type: 'watch_stream',
-    completed: false,
-  },
-  {
-    id: 4,
-    title: 'Сделай заказ в Самокате',
-    icon: ExternalLink,
-    reward: 500,
-    type: 'order',
-    completed: false,
-  },
-];
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  reward: number;
+  completed: boolean;
+}
 
-const Tasks = () => {
-  const handleTaskClick = (task: typeof tasks[0]) => {
-    hapticFeedback.medium();
-    toast.success(`Открыто задание: ${task.title}`);
-  };
+export default function Tasks() {
+  const navigate = useNavigate();
+  const [completedTotal, setCompletedTotal] = useState(0);
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: '1',
+      title: 'Подпишись на телеграм канал',
+      description: 'Подпишись на наш официальный канал',
+      reward: 50,
+      completed: false
+    },
+    {
+      id: '2',
+      title: 'Поделись приложением',
+      description: 'Отправь мини-апп 3 друзьям',
+      reward: 100,
+      completed: false
+    },
+    {
+      id: '3',
+      title: 'Собери команду в фэнтези',
+      description: 'Создай свою первую команду',
+      reward: 150,
+      completed: false
+    },
+    {
+      id: '4',
+      title: 'Посети игру',
+      description: 'Приди на любую игру сезона',
+      reward: 200,
+      completed: false
+    },
+    {
+      id: '5',
+      title: 'Сделай 10 бросков',
+      description: 'Забрось 10 мячей в кольцо',
+      reward: 75,
+      completed: false
+    }
+  ]);
 
-  const claimReward = (task: typeof tasks[0]) => {
+  const handleCompleteTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.completed) return;
+
     hapticFeedback.success();
-    toast.success(`Получено ${task.reward} коинов!`);
+    
+    setTasks(prev => prev.map(t => 
+      t.id === taskId ? { ...t, completed: true } : t
+    ));
+    
+    setCompletedTotal(prev => prev + task.reward);
+    toast.success(`+${task.reward} очков! 🎉`);
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <header className="sticky top-0 bg-card/95 backdrop-blur-lg border-b border-border p-4 z-10">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-foreground">Задания</h1>
-          <WalletBadge />
+    <div className="min-h-screen pb-20">
+      <header className="p-4 flex items-center justify-between bg-card/50 backdrop-blur sticky top-0 z-10">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="rounded-full"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div className="text-center flex-1">
+          <h1 className="text-lg font-bold">Задания</h1>
+          <p className="text-xs text-muted-foreground">Выполняй и получай очки</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Всего</p>
+          <p className="text-lg font-bold text-primary">{completedTotal}</p>
         </div>
       </header>
 
-      <div className="p-4 space-y-4">
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/30">
-          <h2 className="text-lg font-bold mb-2">Выполняй задания</h2>
-          <p className="text-sm text-muted-foreground">
-            Зарабатывай коины за подписки и активности с партнёрами
-          </p>
-        </Card>
-
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <Card key={task.id} className="p-4 hover:border-primary/50 transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <task.icon className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-1">{task.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Coins className="w-4 h-4 text-primary" />
-                    <span className="font-bold text-primary">+{task.reward}</span>
-                  </div>
-                </div>
-                {task.completed ? (
-                  <Button size="sm" variant="outline" disabled>
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Выполнено
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => handleTaskClick(task)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    Выполнить
-                  </Button>
+      <div className="px-4 pt-4 space-y-4">
+        {tasks.map((task) => (
+          <Card 
+            key={task.id} 
+            className={`p-4 transition-all ${
+              task.completed 
+                ? 'bg-primary/10 border-primary/20 opacity-60' 
+                : 'bg-card/80 border-border hover:border-primary/50'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 ${
+                task.completed 
+                  ? 'border-primary bg-primary' 
+                  : 'border-muted'
+              }`}>
+                {task.completed && (
+                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 )}
               </div>
-            </Card>
-          ))}
-        </div>
 
-        <Card className="p-6 bg-muted/30">
-          <h3 className="font-bold mb-3">История наград</h3>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span className="text-sm">Подписка на Telegram</span>
-              <span className="text-primary font-bold">+50</span>
+              <div className="flex-1">
+                <h3 className="font-bold mb-1">{task.title}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{task.description}</p>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-primary">+{task.reward}</span>
+                  <Button
+                    size="sm"
+                    variant={task.completed ? "secondary" : "default"}
+                    onClick={() => handleCompleteTask(task.id)}
+                    disabled={task.completed}
+                    className={task.completed ? "" : "bg-primary hover:bg-primary/90"}
+                  >
+                    {task.completed ? 'Выполнено' : 'Выполнить'}
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-card rounded-lg">
-              <span className="text-sm">Просмотр видео</span>
-              <span className="text-primary font-bold">+100</span>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
     </div>
-  );
-};
-
-export default Tasks;
-
-function Coins(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="8" cy="8" r="6" />
-      <path d="M18.09 10.37A6 6 0 1 1 10.34 18" />
-      <path d="M7 6h1v4" />
-      <path d="m16.71 13.88.7.71-2.82 2.82" />
-    </svg>
   );
 }
