@@ -116,11 +116,6 @@ export default function Game() {
         }
       }
 
-      // Draw swipe trajectory
-      if (swipeStartRef.current && swipeCurrentRef.current && !ballRef.current.isFlying) {
-        drawSwipeLine(ctx);
-      }
-
       drawBall(ctx, ballRef.current);
 
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -283,44 +278,6 @@ export default function Game() {
     ctx.restore();
   };
 
-  const drawSwipeLine = (ctx: CanvasRenderingContext2D) => {
-    if (!swipeStartRef.current || !swipeCurrentRef.current) return;
-
-    const start = swipeStartRef.current;
-    const current = swipeCurrentRef.current;
-
-    // Draw arrow
-    ctx.save();
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 4;
-    ctx.setLineDash([]);
-    
-    ctx.beginPath();
-    ctx.moveTo(start.x, start.y);
-    ctx.lineTo(current.x, current.y);
-    ctx.stroke();
-
-    // Arrow head
-    const angle = Math.atan2(current.y - start.y, current.x - start.x);
-    const headLength = 20;
-    
-    ctx.fillStyle = '#22c55e';
-    ctx.beginPath();
-    ctx.moveTo(current.x, current.y);
-    ctx.lineTo(
-      current.x - headLength * Math.cos(angle - Math.PI / 6),
-      current.y - headLength * Math.sin(angle - Math.PI / 6)
-    );
-    ctx.lineTo(
-      current.x - headLength * Math.cos(angle + Math.PI / 6),
-      current.y - headLength * Math.sin(angle + Math.PI / 6)
-    );
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
-  };
-
   const handleScore = (success: boolean) => {
     if (success) {
       const newScore = score + 2;
@@ -445,17 +402,6 @@ export default function Game() {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       />
-
-      {/* Instructions */}
-      {!ballRef.current.isFlying && score === 0 && (
-        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 pointer-events-none animate-fade-in">
-          <Card className="px-6 py-4 bg-black/90 backdrop-blur-md border-2 border-primary/60 shadow-[0_0_30px_rgba(34,197,94,0.4)]">
-            <p className="text-base text-center text-foreground font-semibold">
-              👆 <span className="text-primary font-black">Свайпните</span> для броска!
-            </p>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
