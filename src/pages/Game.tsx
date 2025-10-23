@@ -5,8 +5,6 @@ import { ClipboardList } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
-import basketballBall from '@/assets/basketball-ball.png';
-import mediaBasketLogo from '@/assets/media-basket-logo.jpg';
 
 export default function Game() {
   const navigate = useNavigate();
@@ -26,27 +24,16 @@ export default function Game() {
   
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const animationFrameRef = useRef<number>();
-  const ballImageRef = useRef<HTMLImageElement>();
-  const logoImageRef = useRef<HTMLImageElement>();
 
-  const BALL_RADIUS = 35;
+  const BALL_RADIUS = 40;
   const HOOP_X = 0.5;
-  const HOOP_Y = 180;
-  const HOOP_WIDTH = 100;
-  const HOOP_HEIGHT = 15;
-  const BACKBOARD_WIDTH = 140;
-  const BACKBOARD_HEIGHT = 100;
-  const GRAVITY = 0.6;
+  const HOOP_Y = 200;
+  const HOOP_WIDTH = 120;
+  const HOOP_HEIGHT = 18;
+  const BACKBOARD_WIDTH = 160;
+  const BACKBOARD_HEIGHT = 110;
+  const GRAVITY = 0.5;
 
-  useEffect(() => {
-    const ballImg = new Image();
-    ballImg.src = basketballBall;
-    ballImg.onload = () => { ballImageRef.current = ballImg; };
-
-    const logoImg = new Image();
-    logoImg.src = mediaBasketLogo;
-    logoImg.onload = () => { logoImageRef.current = logoImg; };
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -132,17 +119,15 @@ export default function Game() {
   const drawHoop = (ctx: CanvasRenderingContext2D, width: number) => {
     const hoopX = width * HOOP_X;
 
+    // Backboard
     ctx.save();
-    ctx.shadowColor = 'rgba(34, 197, 94, 0.5)';
-    ctx.shadowBlur = 30;
-    
     const bgGrad = ctx.createLinearGradient(
       hoopX - BACKBOARD_WIDTH / 2, HOOP_Y - BACKBOARD_HEIGHT - 20,
       hoopX + BACKBOARD_WIDTH / 2, HOOP_Y - 20
     );
-    bgGrad.addColorStop(0, '#e8e8e8');
-    bgGrad.addColorStop(0.5, '#ffffff');
-    bgGrad.addColorStop(1, '#e8e8e8');
+    bgGrad.addColorStop(0, '#4A9FD8');
+    bgGrad.addColorStop(0.5, '#5AB4E8');
+    bgGrad.addColorStop(1, '#4A9FD8');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(
       hoopX - BACKBOARD_WIDTH / 2,
@@ -151,49 +136,51 @@ export default function Game() {
       BACKBOARD_HEIGHT
     );
 
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 5;
+    // Orange border
+    ctx.strokeStyle = '#FF6B35';
+    ctx.lineWidth = 8;
     ctx.strokeRect(
       hoopX - BACKBOARD_WIDTH / 2,
       HOOP_Y - BACKBOARD_HEIGHT - 20,
       BACKBOARD_WIDTH,
       BACKBOARD_HEIGHT
     );
-
-    if (logoImageRef.current?.complete) {
-      ctx.shadowBlur = 0;
-      ctx.drawImage(
-        logoImageRef.current,
-        hoopX - 50,
-        HOOP_Y - BACKBOARD_HEIGHT + 15,
-        100,
-        70
-      );
-    }
     ctx.restore();
 
+    // Yellow hoop rectangle
     ctx.save();
-    ctx.strokeStyle = '#ff6b35';
-    ctx.lineWidth = 8;
-    ctx.shadowColor = '#ff6b35';
-    ctx.shadowBlur = 20;
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 10;
     ctx.beginPath();
-    ctx.rect(
+    ctx.roundRect(
+      hoopX - HOOP_WIDTH / 2 + 10,
+      HOOP_Y - 40,
+      HOOP_WIDTH - 20,
+      50,
+      8
+    );
+    ctx.stroke();
+    ctx.restore();
+
+    // Orange hoop base
+    ctx.save();
+    ctx.fillStyle = '#FF6B35';
+    ctx.fillRect(
       hoopX - HOOP_WIDTH / 2,
       HOOP_Y,
       HOOP_WIDTH,
       HOOP_HEIGHT
     );
-    ctx.stroke();
     ctx.restore();
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 10; i++) {
-      const x = hoopX - HOOP_WIDTH / 2 + (i / 9) * HOOP_WIDTH;
+    // White net
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 2.5;
+    for (let i = 0; i < 12; i++) {
+      const x = hoopX - HOOP_WIDTH / 2 + (i / 11) * HOOP_WIDTH;
       ctx.beginPath();
       ctx.moveTo(x, HOOP_Y + HOOP_HEIGHT);
-      ctx.lineTo(x, HOOP_Y + HOOP_HEIGHT + 50);
+      ctx.lineTo(x + Math.sin(i) * 5, HOOP_Y + HOOP_HEIGHT + 60);
       ctx.stroke();
     }
   };
@@ -202,32 +189,50 @@ export default function Game() {
     const ball = ballRef.current;
     ctx.save();
 
+    // Shadow
     if (!ball.isFlying) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-      ctx.shadowBlur = 25;
-      ctx.shadowOffsetY = 12;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 15;
     }
 
-    if (ballImageRef.current?.complete) {
-      ctx.drawImage(
-        ballImageRef.current,
-        ball.x - ball.radius,
-        ball.y - ball.radius,
-        ball.radius * 2,
-        ball.radius * 2
-      );
-    } else {
-      const grad = ctx.createRadialGradient(
-        ball.x - 10, ball.y - 10, 5,
-        ball.x, ball.y, ball.radius
-      );
-      grad.addColorStop(0, '#22c55e');
-      grad.addColorStop(1, '#15803d');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Orange basketball
+    const grad = ctx.createRadialGradient(
+      ball.x - 12, ball.y - 12, 5,
+      ball.x, ball.y, ball.radius
+    );
+    grad.addColorStop(0, '#FF8C42');
+    grad.addColorStop(1, '#D2691E');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Basketball lines
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 3;
+    
+    // Horizontal line
+    ctx.beginPath();
+    ctx.moveTo(ball.x - ball.radius + 5, ball.y);
+    ctx.lineTo(ball.x + ball.radius - 5, ball.y);
+    ctx.stroke();
+    
+    // Vertical line
+    ctx.beginPath();
+    ctx.moveTo(ball.x, ball.y - ball.radius + 5);
+    ctx.lineTo(ball.x, ball.y + ball.radius - 5);
+    ctx.stroke();
+    
+    // Curved lines
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius * 0.6, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius * 0.6, Math.PI / 2, -Math.PI / 2);
+    ctx.stroke();
 
     ctx.restore();
   };
@@ -296,7 +301,7 @@ export default function Game() {
     const time = (Date.now() - touchStartRef.current.time) / 1000;
 
     if (dist > 20 && time > 0) {
-      const power = Math.min(dist / time / 80, 18);
+      const power = Math.min(dist / time / 50, 25);
       ballRef.current.vx = (dx / dist) * power;
       ballRef.current.vy = (dy / dist) * power;
       ballRef.current.isFlying = true;
