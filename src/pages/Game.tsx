@@ -8,58 +8,49 @@ import { hapticFeedback } from '@/lib/telegram';
 import basketballBall from '@/assets/basketball-ball.png';
 import mediaBasketLogo from '@/assets/media-basket-logo.jpg';
 
-interface Ball {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  isFlying: boolean;
-}
-
 export default function Game() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   
-  const ballRef = useRef<Ball>({ x: 0, y: 0, vx: 0, vy: 0, radius: 30, isFlying: false });
-  const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const swipeCurrentRef = useRef<{ x: number; y: number } | null>(null);
+  const ballRef = useRef({
+    x: 0,
+    y: 0,
+    vx: 0,
+    vy: 0,
+    radius: 35,
+    isDragging: false,
+    isFlying: false
+  });
+  
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const animationFrameRef = useRef<number>();
   const ballImageRef = useRef<HTMLImageElement>();
   const logoImageRef = useRef<HTMLImageElement>();
 
-  // Game constants
-  const BALL_RADIUS = 30;
-  const HOOP_X = 0.5; // Center
-  const HOOP_Y = 150;
-  const HOOP_WIDTH = 80;
-  const HOOP_RADIUS = 40;
-  const GRAVITY = 0.8;
-  const BACKBOARD_WIDTH = 120;
-  const BACKBOARD_HEIGHT = 90;
+  const BALL_RADIUS = 35;
+  const HOOP_X = 0.5;
+  const HOOP_Y = 180;
+  const HOOP_WIDTH = 100;
+  const HOOP_HEIGHT = 15;
+  const BACKBOARD_WIDTH = 140;
+  const BACKBOARD_HEIGHT = 100;
+  const GRAVITY = 0.6;
 
-  // Load images
   useEffect(() => {
     const ballImg = new Image();
     ballImg.src = basketballBall;
-    ballImg.onload = () => {
-      ballImageRef.current = ballImg;
-    };
+    ballImg.onload = () => { ballImageRef.current = ballImg; };
 
     const logoImg = new Image();
     logoImg.src = mediaBasketLogo;
-    logoImg.onload = () => {
-      logoImageRef.current = logoImg;
-    };
+    logoImg.onload = () => { logoImageRef.current = logoImg; };
   }, []);
 
-  // Game loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -69,7 +60,7 @@ export default function Game() {
       
       if (!ballRef.current.isFlying) {
         ballRef.current.x = canvas.width / 2;
-        ballRef.current.y = canvas.height - 120;
+        ballRef.current.y = canvas.height - 100;
       }
     };
     
@@ -79,45 +70,41 @@ export default function Game() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Background
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#0f1810');
-      gradient.addColorStop(1, '#000000');
-      ctx.fillStyle = gradient;
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      bgGradient.addColorStop(0, '#0a1f0a');
+      bgGradient.addColorStop(1, '#000000');
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      drawCourt(ctx, canvas.width, canvas.height);
       drawHoop(ctx, canvas.width);
 
-      // Ball physics
       if (ballRef.current.isFlying) {
-        const ball = ballRef.current;
-        ball.vy += GRAVITY;
-        ball.x += ball.vx;
-        ball.y += ball.vy;
+        ballRef.current.vy += GRAVITY;
+        ballRef.current.x += ballRef.current.vx;
+        ballRef.current.y += ballRef.current.vy;
 
-        const hoopX = canvas.width * HOOP_X;
-        
-        // Check if scored
+        const hoopCenterX = canvas.width * HOOP_X;
+        const hoopLeft = hoopCenterX - HOOP_WIDTH / 2;
+        const hoopRight = hoopCenterX + HOOP_WIDTH / 2;
+
         if (
-          ball.y > HOOP_Y - 10 &&
-          ball.y < HOOP_Y + 30 &&
-          Math.abs(ball.x - hoopX) < HOOP_RADIUS - ball.radius &&
-          ball.vy > 0
+          ballRef.current.y >= HOOP_Y - 10 &&
+          ballRef.current.y <= HOOP_Y + 40 &&
+          ballRef.current.x > hoopLeft + 10 &&
+          ballRef.current.x < hoopRight - 10 &&
+          ballRef.current.vy > 0
         ) {
           handleScore(true);
           resetBall();
         }
 
-        // Check bounds
-        if (ball.y > canvas.height + 50 || ball.x < -50 || ball.x > canvas.width + 50) {
+        if (ballRef.current.y > canvas.height + 100) {
           handleScore(false);
           resetBall();
         }
       }
 
-      drawBall(ctx, ballRef.current);
-
+      drawBall(ctx);
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
@@ -125,9 +112,7 @@ export default function Game() {
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   }, []);
 
@@ -135,47 +120,30 @@ export default function Game() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    ballRef.current = {
-      x: canvas.width / 2,
-      y: canvas.height - 120,
-      vx: 0,
-      vy: 0,
-      radius: BALL_RADIUS,
-      isFlying: false
-    };
-    swipeStartRef.current = null;
-    swipeCurrentRef.current = null;
+    ballRef.current.x = canvas.width / 2;
+    ballRef.current.y = canvas.height - 100;
+    ballRef.current.vx = 0;
+    ballRef.current.vy = 0;
+    ballRef.current.isFlying = false;
+    ballRef.current.isDragging = false;
   };
 
-  const drawCourt = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Floor line
-    ctx.strokeStyle = 'rgba(34, 197, 94, 0.2)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(0, height - 100);
-    ctx.lineTo(width, height - 100);
-    ctx.stroke();
-  };
 
   const drawHoop = (ctx: CanvasRenderingContext2D, width: number) => {
     const hoopX = width * HOOP_X;
 
-    // Backboard
     ctx.save();
-    ctx.shadowColor = 'rgba(34, 197, 94, 0.6)';
-    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'rgba(34, 197, 94, 0.5)';
+    ctx.shadowBlur = 30;
     
-    const gradient = ctx.createLinearGradient(
-      hoopX - BACKBOARD_WIDTH / 2,
-      HOOP_Y - BACKBOARD_HEIGHT - 20,
-      hoopX + BACKBOARD_WIDTH / 2,
-      HOOP_Y - 20
+    const bgGrad = ctx.createLinearGradient(
+      hoopX - BACKBOARD_WIDTH / 2, HOOP_Y - BACKBOARD_HEIGHT - 20,
+      hoopX + BACKBOARD_WIDTH / 2, HOOP_Y - 20
     );
-    gradient.addColorStop(0, '#ffffff');
-    gradient.addColorStop(0.5, '#f5f5f5');
-    gradient.addColorStop(1, '#ffffff');
-    ctx.fillStyle = gradient;
-    
+    bgGrad.addColorStop(0, '#e8e8e8');
+    bgGrad.addColorStop(0.5, '#ffffff');
+    bgGrad.addColorStop(1, '#e8e8e8');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(
       hoopX - BACKBOARD_WIDTH / 2,
       HOOP_Y - BACKBOARD_HEIGHT - 20,
@@ -184,7 +152,7 @@ export default function Game() {
     );
 
     ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 5;
     ctx.strokeRect(
       hoopX - BACKBOARD_WIDTH / 2,
       HOOP_Y - BACKBOARD_HEIGHT - 20,
@@ -192,65 +160,55 @@ export default function Game() {
       BACKBOARD_HEIGHT
     );
 
-    // Logo
-    if (logoImageRef.current && logoImageRef.current.complete) {
+    if (logoImageRef.current?.complete) {
       ctx.shadowBlur = 0;
       ctx.drawImage(
         logoImageRef.current,
-        hoopX - 45,
-        HOOP_Y - BACKBOARD_HEIGHT + 10,
-        90,
-        65
+        hoopX - 50,
+        HOOP_Y - BACKBOARD_HEIGHT + 15,
+        100,
+        70
       );
     }
-
     ctx.restore();
 
-    // Hoop ring
     ctx.save();
-    ctx.shadowColor = '#ff6b35';
-    ctx.shadowBlur = 25;
     ctx.strokeStyle = '#ff6b35';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 8;
+    ctx.shadowColor = '#ff6b35';
+    ctx.shadowBlur = 20;
     ctx.beginPath();
-    ctx.arc(hoopX, HOOP_Y, HOOP_RADIUS, 0, Math.PI * 2);
+    ctx.rect(
+      hoopX - HOOP_WIDTH / 2,
+      HOOP_Y,
+      HOOP_WIDTH,
+      HOOP_HEIGHT
+    );
     ctx.stroke();
     ctx.restore();
 
-    // Net
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.lineWidth = 2;
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const x1 = hoopX + Math.cos(angle) * HOOP_RADIUS;
-      const y1 = HOOP_Y + Math.sin(angle) * HOOP_RADIUS;
-      const x2 = hoopX + Math.cos(angle) * (HOOP_RADIUS - 10);
-      const y2 = HOOP_Y + 40 + Math.sin(angle) * 5;
-      
+    for (let i = 0; i < 10; i++) {
+      const x = hoopX - HOOP_WIDTH / 2 + (i / 9) * HOOP_WIDTH;
       ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.quadraticCurveTo(
-        (x1 + x2) / 2,
-        (y1 + y2) / 2 + 10,
-        x2,
-        y2
-      );
+      ctx.moveTo(x, HOOP_Y + HOOP_HEIGHT);
+      ctx.lineTo(x, HOOP_Y + HOOP_HEIGHT + 50);
       ctx.stroke();
     }
   };
 
-  const drawBall = (ctx: CanvasRenderingContext2D, ball: Ball) => {
+  const drawBall = (ctx: CanvasRenderingContext2D) => {
+    const ball = ballRef.current;
     ctx.save();
 
-    // Shadow
-    if (!ball.isFlying || ball.y < canvasRef.current!.height - 150) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = 20;
-      ctx.shadowOffsetX = 8;
-      ctx.shadowOffsetY = 10;
+    if (!ball.isFlying) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 25;
+      ctx.shadowOffsetY = 12;
     }
 
-    if (ballImageRef.current && ballImageRef.current.complete) {
+    if (ballImageRef.current?.complete) {
       ctx.drawImage(
         ballImageRef.current,
         ball.x - ball.radius,
@@ -259,17 +217,13 @@ export default function Game() {
         ball.radius * 2
       );
     } else {
-      const ballGradient = ctx.createRadialGradient(
-        ball.x - 8, 
-        ball.y - 8, 
-        0, 
-        ball.x, 
-        ball.y, 
-        ball.radius
+      const grad = ctx.createRadialGradient(
+        ball.x - 10, ball.y - 10, 5,
+        ball.x, ball.y, ball.radius
       );
-      ballGradient.addColorStop(0, '#22c55e');
-      ballGradient.addColorStop(1, '#166534');
-      ctx.fillStyle = ballGradient;
+      grad.addColorStop(0, '#22c55e');
+      grad.addColorStop(1, '#15803d');
+      ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -282,27 +236,17 @@ export default function Game() {
     if (success) {
       const newScore = score + 2;
       const newCombo = combo + 1;
-      
       setScore(newScore);
       setCombo(newCombo);
-      
       hapticFeedback.success();
       
-      if (newCombo > 1) {
-        toast.success(`🔥 ${newCombo}x КОМБО! +2 очка`, {
-          duration: 1500,
-        });
-      } else {
-        toast.success('🏀 ПОПАЛ! +2 очка', {
-          duration: 1200,
-        });
-      }
+      toast.success(newCombo > 1 ? `🔥 ${newCombo}x КОМБО! +2` : '🏀 +2', {
+        duration: 1200,
+      });
     } else {
       setCombo(0);
       hapticFeedback.error();
-      toast.error('💥 Мимо!', {
-        duration: 1000,
-      });
+      toast.error('Мимо', { duration: 800 });
     }
   };
 
@@ -310,54 +254,57 @@ export default function Game() {
     if (ballRef.current.isFlying) return;
     e.preventDefault();
     
-    const touch = e.touches[0];
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
-    swipeStartRef.current = { x, y, time: Date.now() };
-    swipeCurrentRef.current = { x, y };
-    hapticFeedback.light();
+    const dx = x - ballRef.current.x;
+    const dy = y - ballRef.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < ballRef.current.radius + 30) {
+      touchStartRef.current = { x, y, time: Date.now() };
+      ballRef.current.isDragging = true;
+      hapticFeedback.light();
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!swipeStartRef.current || ballRef.current.isFlying) return;
+    if (!ballRef.current.isDragging || !touchStartRef.current) return;
     e.preventDefault();
-    
-    const touch = e.touches[0];
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!ballRef.current.isDragging || !touchStartRef.current) return;
+    e.preventDefault();
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
+    const touch = e.changedTouches[0];
+    const endX = touch.clientX - rect.left;
+    const endY = touch.clientY - rect.top;
 
-    swipeCurrentRef.current = { x, y };
-  };
+    const dx = endX - touchStartRef.current.x;
+    const dy = endY - touchStartRef.current.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const time = (Date.now() - touchStartRef.current.time) / 1000;
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!swipeStartRef.current || !swipeCurrentRef.current || ballRef.current.isFlying) return;
-    e.preventDefault();
-
-    const dx = swipeCurrentRef.current.x - swipeStartRef.current.x;
-    const dy = swipeCurrentRef.current.y - swipeStartRef.current.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance > 30) {
-      const timeDiff = (Date.now() - swipeStartRef.current.time) / 1000;
-      const speed = Math.min(distance / timeDiff / 100, 15);
-      
-      ballRef.current.vx = (dx / distance) * speed;
-      ballRef.current.vy = (dy / distance) * speed;
+    if (dist > 20 && time > 0) {
+      const power = Math.min(dist / time / 80, 18);
+      ballRef.current.vx = (dx / dist) * power;
+      ballRef.current.vy = (dy / dist) * power;
       ballRef.current.isFlying = true;
       hapticFeedback.medium();
     }
 
-    swipeStartRef.current = null;
-    swipeCurrentRef.current = null;
+    ballRef.current.isDragging = false;
+    touchStartRef.current = null;
   };
 
   return (
