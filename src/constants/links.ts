@@ -13,4 +13,4 @@ export const PARTNER_LINKS = {
 
 export const MERCH_LINK = 'https://mediabasket.store';
 
-export const TICKET_LINK = 'https://tickets.mediabasket.ru';
+export const TICKET_LINK = 'https://msk.kassir.ru/sport/liga-stavok-media-basket-shestoy-sezon';

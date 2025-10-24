@@ -103,12 +103,8 @@ export default function Dating() {
     }
 
     setTimeout(() => {
-      if (currentIndex < profiles.length - 1) {
-        setCurrentIndex(prev => prev + 1);
-      } else {
-        setCurrentIndex(profiles.length);
-      }
       setDirection(null);
+      setCurrentIndex(prev => prev + 1);
     }, 300);
   };
 
@@ -119,7 +115,7 @@ export default function Dating() {
 
   if (currentIndex >= profiles.length) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 pb-24">
+      <div className="fixed inset-0 bg-background flex items-center justify-center px-4 sm:px-6">
         <Card className="p-6 sm:p-8 text-center max-w-md">
           <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
           <p className="text-muted-foreground mb-4">Возвращайтесь позже за новыми знакомствами</p>
@@ -132,7 +128,7 @@ export default function Dating() {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 pb-24 relative overflow-hidden">
+    <div className="fixed inset-0 bg-background px-4 sm:px-6 py-6 pb-24 overflow-hidden">
       {/* Фоновые эффекты */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(236,72,153,0.1),transparent_50%)]" />
 

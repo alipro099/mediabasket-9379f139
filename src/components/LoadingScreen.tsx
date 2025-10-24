@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import seasonLogo from '@/assets/season-logo.jpg';
+import loadingLogo from '@/assets/loading-logo.jpg';
 
 export default function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
   const [progress, setProgress] = useState(0);
@@ -26,7 +26,7 @@ export default function LoadingScreen({ onLoadComplete }: { onLoadComplete: () =
         <div className="relative">
           <div className="absolute inset-0 blur-3xl opacity-50 bg-primary rounded-full" />
           <img 
-            src={seasonLogo} 
+            src={loadingLogo} 
             alt="Media Basket" 
             className="w-64 h-64 object-contain mx-auto relative z-10 animate-pulse"
           />
