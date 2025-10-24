@@ -70,13 +70,6 @@ export default function Dating() {
   const [touchMove, setTouchMove] = useState<{ x: number; y: number } | null>(null);
   const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
-  // Reset card state when index changes
-  useEffect(() => {
-    setDirection(null);
-    setTouchStart(null);
-    setTouchMove(null);
-  }, [currentIndex]);
-
   if (currentIndex >= profiles.length) {
     return (
       <div className="fixed inset-0 bg-background flex items-center justify-center px-4 sm:px-6">
@@ -103,16 +96,21 @@ export default function Dating() {
   const drag = getDragTransform();
 
   const cardSpring = useSpring({
-    transform: direction === 'left' 
-      ? 'translateX(-150%) rotate(-20deg)' 
-      : direction === 'right' 
-      ? 'translateX(150%) rotate(20deg)' 
-      : touchStart && touchMove
-      ? `translateX(${drag.x}px) rotate(${drag.rotate}deg)`
-      : 'translateX(0%) rotate(0deg)',
-    opacity: direction ? 0 : 1,
+    from: { transform: 'translateX(0%) rotate(0deg)', opacity: 1 },
+    to: {
+      transform: direction === 'left' 
+        ? 'translateX(-150%) rotate(-20deg)' 
+        : direction === 'right' 
+        ? 'translateX(150%) rotate(20deg)' 
+        : touchStart && touchMove
+        ? `translateX(${drag.x}px) rotate(${drag.rotate}deg)`
+        : 'translateX(0%) rotate(0deg)',
+      opacity: direction ? 0 : 1,
+    },
     config: { duration: direction ? 300 : 0 },
-    reset: currentIndex > 0
+    immediate: !direction && !touchStart,
+    reset: true,
+    key: currentIndex
   });
 
   const handleSwipe = async (liked: boolean) => {
@@ -139,6 +137,9 @@ export default function Dating() {
 
     // Wait for animation to complete, then show next profile
     setTimeout(() => {
+      setDirection(null);
+      setTouchStart(null);
+      setTouchMove(null);
       setCurrentIndex(prev => prev + 1);
     }, 350);
   };
@@ -174,25 +175,11 @@ export default function Dating() {
     if (Math.abs(deltaX) > threshold) {
       const liked = deltaX > 0;
       handleSwipe(liked);
+    } else {
+      setTouchStart(null);
+      setTouchMove(null);
     }
-
-    setTouchStart(null);
-    setTouchMove(null);
   };
-
-  if (currentIndex >= profiles.length) {
-    return (
-      <div className="fixed inset-0 bg-background flex items-center justify-center px-4 sm:px-6">
-        <Card className="p-6 sm:p-8 text-center max-w-md">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
-          <p className="text-muted-foreground mb-4">Возвращайтесь позже за новыми знакомствами</p>
-          <Button onClick={() => setCurrentIndex(0)} className="bg-primary hover:bg-primary/90 text-black">
-            Начать сначала
-          </Button>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
