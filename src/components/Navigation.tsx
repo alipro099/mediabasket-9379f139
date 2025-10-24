@@ -8,7 +8,7 @@ const tabs = [
   { icon: Trophy, label: 'Фэнтези', path: '/fantasy' },
   { icon: Gamepad2, label: 'Игра', path: '/game' },
   { icon: ListTodo, label: 'Задания', path: '/tasks' },
-  { icon: Users, label: 'Знакомства', path: '/dating' },
+  { icon: Users, label: 'Мэтч', path: '/dating' },
   { icon: MessageCircle, label: 'Чат', path: '/chat' },
 ];
 

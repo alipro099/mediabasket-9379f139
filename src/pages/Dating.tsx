@@ -139,7 +139,7 @@ export default function Dating() {
             </div>
           </div>
           
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">DATING</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">МЭТЧ</h1>
           
           {/* Swipes counter and buy button */}
           <div className="flex items-center justify-center gap-3">
@@ -210,31 +210,31 @@ export default function Dating() {
         )}
 
         {/* Кнопки действий */}
-        <div className="flex justify-center gap-4 sm:gap-6 mt-4 sm:mt-6">
+        <div className="flex justify-center gap-6 sm:gap-8 mt-4 sm:mt-6">
           <Button
             onClick={() => handleSwipe(false)}
             disabled={currentIndex >= profiles.length || swipesAvailable === 0}
             size="lg"
-            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
+            className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
           >
-            <X className="w-6 h-6 sm:w-8 sm:h-8" />
+            <X className="w-7 h-7 sm:w-9 sm:h-9" />
           </Button>
           <Button
             onClick={() => handleSwipe(true)}
             disabled={currentIndex >= profiles.length || swipesAvailable === 0}
             size="lg"
-            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
+            className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
           >
-            <Heart className="w-6 h-6 sm:w-8 sm:h-8" />
+            <Heart className="w-7 h-7 sm:w-9 sm:h-9" />
           </Button>
         </div>
 
         {/* Индикатор прогресса */}
-        <div className="mt-4 sm:mt-6 flex justify-center gap-1">
+        <div className="mt-4 sm:mt-6 flex justify-center gap-1 pb-4">
           {profiles.map((_, idx) => (
             <div
               key={idx}
-              className={`h-1 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all ${
                 idx < currentIndex 
                   ? 'w-6 sm:w-8 bg-primary' 
                   : idx === currentIndex 

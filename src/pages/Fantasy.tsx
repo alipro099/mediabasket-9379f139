@@ -79,7 +79,7 @@ export default function Fantasy() {
             <CoinsDisplay />
           </div>
           
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-4">FANTASY</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-4">ФЭНТЕЗИ</h1>
           
           <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
             <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">

@@ -7,7 +7,7 @@ const SWIPE_COST = 100;
 const SWIPES_PER_PURCHASE = 10;
 
 export function useSwipes() {
-  const [swipesAvailable, setSwipesAvailable] = useState(0);
+  const [swipesAvailable, setSwipesAvailable] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
   const { balance, spendCoins } = useCoinsStore();
 
@@ -23,7 +23,7 @@ export function useSwipes() {
         .single();
 
       if (error) throw error;
-      setSwipesAvailable(data?.swipes_available || 0);
+      setSwipesAvailable(data?.swipes_available ?? 5);
     } catch (error) {
       console.error('Error fetching swipes:', error);
     } finally {
