@@ -130,8 +130,8 @@ export default function Chat() {
 
       <div className="relative z-10 max-w-3xl mx-auto">
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center">ЧАТ</h1>
-          <p className="text-center text-muted-foreground mt-2 text-sm sm:text-base">Общайся с другими игроками</p>
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center">ЧАТ ТРИБУН</h1>
+          <p className="text-center text-muted-foreground mt-2 text-sm sm:text-base">Общайся и делись эмоциями во время игр</p>
         </div>
 
         {/* Список сообщений */}
