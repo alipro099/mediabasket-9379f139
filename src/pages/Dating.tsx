@@ -128,14 +128,14 @@ export default function Dating() {
   }
 
   return (
-    <div className="fixed inset-0 bg-background px-4 sm:px-6 py-6 pb-24 overflow-hidden">
+    <div className="fixed inset-0 bg-background overflow-hidden flex flex-col">
       {/* Фоновые эффекты */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(236,72,153,0.1),transparent_50%)]" />
 
-      <div className="relative z-10 max-w-md mx-auto">
+      <div className="relative z-10 flex-1 flex flex-col px-4 sm:px-6 py-4 pb-20 max-w-md mx-auto w-full">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-3 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
             <CoinsDisplay />
             <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
               <Heart className="w-4 h-4 text-primary fill-current" />
@@ -143,7 +143,7 @@ export default function Dating() {
             </div>
           </div>
           
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">ЗНАКОМСТВО</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-2">МЭТЧ</h1>
           
           {/* Swipes counter and buy button */}
           <div className="flex items-center justify-center gap-3">
@@ -164,11 +164,13 @@ export default function Dating() {
           </div>
         </div>
 
-        {currentIndex < profiles.length ? (
-          <animated.div key={currentIndex} style={cardSpring as any}>
-            <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
-              {/* Фото */}
-              <div className="relative h-[400px] sm:h-96 overflow-hidden">
+        {/* Profile Card - Flex grow to fill space */}
+        <div className="flex-1 flex items-center justify-center mb-3">
+          {currentIndex < profiles.length ? (
+            <animated.div key={currentIndex} style={cardSpring as any} className="w-full">
+              <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
+                {/* Фото */}
+                <div className="relative h-[400px] sm:h-96 overflow-hidden">
                 <img 
                   src={currentProfile.photo} 
                   alt={currentProfile.name}
@@ -205,48 +207,46 @@ export default function Dating() {
                 </div>
               </div>
             </Card>
-          </animated.div>
-        ) : (
-          <Card className="p-6 sm:p-8 text-center">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
-            <p className="text-muted-foreground">Возвращайтесь позже за новыми знакомствами</p>
-          </Card>
-        )}
-
-        {/* Кнопки действий */}
-        <div className="flex justify-center gap-6 sm:gap-8 mt-4 sm:mt-6">
-          <Button
-            onClick={() => handleSwipe(false)}
-            disabled={currentIndex >= profiles.length || swipesAvailable === 0}
-            size="lg"
-            className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
-          >
-            <X className="w-7 h-7 sm:w-9 sm:h-9" />
-          </Button>
-          <Button
-            onClick={() => handleSwipe(true)}
-            disabled={currentIndex >= profiles.length || swipesAvailable === 0}
-            size="lg"
-            className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
-          >
-            <Heart className="w-7 h-7 sm:w-9 sm:h-9" />
-          </Button>
+            </animated.div>
+          ) : null}
         </div>
 
-        {/* Индикатор прогресса */}
-        <div className="mt-4 sm:mt-6 flex justify-center gap-1 pb-4">
-          {profiles.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1.5 rounded-full transition-all ${
-                idx < currentIndex 
-                  ? 'w-6 sm:w-8 bg-primary' 
-                  : idx === currentIndex 
-                  ? 'w-8 sm:w-12 bg-primary' 
-                  : 'w-6 sm:w-8 bg-primary/20'
-              }`}
-            />
-          ))}
+        {/* Кнопки действий - Fixed at bottom */}
+        <div className="flex-shrink-0">
+          <div className="flex justify-center gap-6 sm:gap-8 mb-3">
+            <Button
+              onClick={() => handleSwipe(false)}
+              disabled={currentIndex >= profiles.length || swipesAvailable === 0}
+              size="lg"
+              className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
+            >
+              <X className="w-7 h-7 sm:w-9 sm:h-9" />
+            </Button>
+            <Button
+              onClick={() => handleSwipe(true)}
+              disabled={currentIndex >= profiles.length || swipesAvailable === 0}
+              size="lg"
+              className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
+            >
+              <Heart className="w-7 h-7 sm:w-9 sm:h-9" />
+            </Button>
+          </div>
+
+          {/* Индикатор прогресса */}
+          <div className="flex justify-center gap-1">
+            {profiles.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 rounded-full transition-all ${
+                  idx < currentIndex 
+                    ? 'w-6 sm:w-8 bg-primary' 
+                    : idx === currentIndex 
+                    ? 'w-8 sm:w-12 bg-primary' 
+                    : 'w-6 sm:w-8 bg-primary/20'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
