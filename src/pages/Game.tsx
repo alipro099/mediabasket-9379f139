@@ -240,13 +240,15 @@ export default function Game() {
 
   const handleScore = (success: boolean) => {
     if (success) {
-      const newScore = score + 2;
-      setScore(newScore);
-      hapticFeedback.success();
-      
-      toast.success('🏀 SCORE +2', {
-        duration: 1200,
+      setScore(prevScore => {
+        const newScore = prevScore + 2;
+        toast.success(`🏀 SCORE +2`, {
+          description: `Всего: ${newScore}`,
+          duration: 1200,
+        });
+        return newScore;
       });
+      hapticFeedback.success();
     } else {
       hapticFeedback.error();
     }

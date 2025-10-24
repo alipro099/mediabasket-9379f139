@@ -123,8 +123,12 @@ export default function Dating() {
     }
 
     setTimeout(() => {
-      setDirection(null);
-      setCurrentIndex(prev => prev + 1);
+      if (currentIndex + 1 < profiles.length) {
+        setCurrentIndex(prev => prev + 1);
+        setDirection(null);
+      } else {
+        setCurrentIndex(prev => prev + 1);
+      }
     }, 300);
   };
 
