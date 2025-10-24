@@ -87,23 +87,27 @@ export default function Dating() {
     setDirection(liked ? 'right' : 'left');
     hapticFeedback.medium();
 
-    setTimeout(() => {
-      if (liked) {
-        const isMatch = Math.random() > 0.7;
-        if (isMatch) {
-          setMatches(prev => prev + 1);
-          hapticFeedback.success();
-          toast.success('Это мэтч! 🎉', {
-            description: `${profiles[currentIndex].name} тоже лайкнул(а) тебя!`,
-          });
-        } else {
-          toast('Лайк отправлен', {
-            description: 'Ждем взаимности...',
-          });
-        }
+    if (liked) {
+      const isMatch = Math.random() > 0.7;
+      if (isMatch) {
+        setMatches(prev => prev + 1);
+        hapticFeedback.success();
+        toast.success('Это мэтч! 🎉', {
+          description: `${currentProfile.name} тоже лайкнул(а) тебя!`,
+        });
+      } else {
+        toast('Лайк отправлен', {
+          description: 'Ждем взаимности...',
+        });
       }
-      
-      setCurrentIndex(prev => prev + 1);
+    }
+
+    setTimeout(() => {
+      if (currentIndex < profiles.length - 1) {
+        setCurrentIndex(prev => prev + 1);
+      } else {
+        setCurrentIndex(profiles.length);
+      }
       setDirection(null);
     }, 300);
   };

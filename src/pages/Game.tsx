@@ -4,34 +4,29 @@ import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
 import basketballHoop from '@/assets/basketball-hoop.jpg';
 import greenBasketball from '@/assets/green-basketball.png';
-import { RewardChest } from '@/components/RewardChest';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
-import { useCoinsStore } from '@/stores/coinsStore';
 import { Button } from '@/components/ui/button';
-import { RotateCcw, CheckSquare } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Game() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
-  const [showChest, setShowChest] = useState(false);
-  const { addCoins } = useCoinsStore();
-  const [gamesPlayed, setGamesPlayed] = useState(0);
   
   const ballRef = useRef({
     x: 0,
     y: 0,
     vx: 0,
     vy: 0,
-    radius: 30,
+    radius: 36,
     isDragging: false,
     isFlying: false
   });
   
   const hoopRef = useRef({
     x: 0,
-    y: 250,
+    y: 350,
     width: 140,
     height: 20,
     backboardWidth: 200,
@@ -237,36 +232,18 @@ export default function Game() {
 
   const handleScore = (success: boolean) => {
     if (success) {
-      const newScore = score + 1;
+      const newScore = score + 2;
       setScore(newScore);
       hapticFeedback.success();
       
-      toast.success('🏀 SCORE +1', {
+      toast.success('🏀 SCORE +2', {
         duration: 1200,
       });
     } else {
       hapticFeedback.error();
-      setGamesPlayed(prev => prev + 1);
-      
-      // Показываем сундук после каждой игры
-      setShowChest(true);
     }
   };
 
-  const handleRewardClaimed = async (reward: any) => {
-    if (reward.type === 'coins') {
-      await addCoins(reward.amount, `Награда за игру (${score} очков)`);
-    } else {
-      toast.success(`Получен: ${reward.item}`, {
-        description: 'Доступен в вашем профиле'
-      });
-    }
-  };
-
-  const handleRestart = () => {
-    setScore(0);
-    resetBall();
-  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (ballRef.current.isFlying) return;
@@ -339,24 +316,14 @@ export default function Game() {
             </div>
           </Card>
 
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/tasks')}
-              className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
-            >
-              <CheckSquare className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRestart}
-              className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
-            >
-              <RotateCcw className="w-5 h-5" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/tasks')}
+            className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
+          >
+            <CheckSquare className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
@@ -369,12 +336,6 @@ export default function Game() {
         onTouchEnd={handleTouchEnd}
       />
 
-      {/* Reward Chest */}
-      <RewardChest
-        isOpen={showChest}
-        onClose={() => setShowChest(false)}
-        onRewardClaimed={handleRewardClaimed}
-      />
     </div>
   );
 }
