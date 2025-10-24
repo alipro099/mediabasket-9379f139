@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
 import basketballHoop from '@/assets/basketball-hoop.jpg';
-import greenBasketball from '@/assets/green-basketball.png';
+import greenBasketball from '@/assets/green-basketball.webp';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
 import { Button } from '@/components/ui/button';
 import { CheckSquare } from 'lucide-react';

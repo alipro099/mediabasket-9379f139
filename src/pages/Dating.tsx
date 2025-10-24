@@ -169,7 +169,7 @@ export default function Dating() {
         </div>
 
         {currentIndex < profiles.length ? (
-          <animated.div style={cardSpring as any}>
+          <animated.div key={currentIndex} style={cardSpring as any}>
             <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
               {/* Фото */}
               <div className="relative h-[400px] sm:h-96 overflow-hidden">
