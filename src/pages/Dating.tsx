@@ -70,14 +70,28 @@ export default function Dating() {
   const [touchMove, setTouchMove] = useState<{ x: number; y: number } | null>(null);
   const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
-  const currentProfile = profiles[currentIndex];
-
   // Reset card state when index changes
   useEffect(() => {
     setDirection(null);
     setTouchStart(null);
     setTouchMove(null);
   }, [currentIndex]);
+
+  if (currentIndex >= profiles.length) {
+    return (
+      <div className="fixed inset-0 bg-background flex items-center justify-center px-4 sm:px-6">
+        <Card className="p-6 sm:p-8 text-center max-w-md">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
+          <p className="text-muted-foreground mb-4">Возвращайтесь позже за новыми знакомствами</p>
+          <Button onClick={() => setCurrentIndex(0)} className="bg-primary hover:bg-primary/90 text-black">
+            Начать сначала
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentProfile = profiles[currentIndex];
 
   const getDragTransform = () => {
     if (!touchStart || !touchMove) return { x: 0, rotate: 0 };
@@ -97,7 +111,8 @@ export default function Dating() {
       ? `translateX(${drag.x}px) rotate(${drag.rotate}deg)`
       : 'translateX(0%) rotate(0deg)',
     opacity: direction ? 0 : 1,
-    config: { duration: direction ? 300 : 0 }
+    config: { duration: direction ? 300 : 0 },
+    reset: currentIndex > 0
   });
 
   const handleSwipe = async (liked: boolean) => {
@@ -122,14 +137,10 @@ export default function Dating() {
       }
     }
 
+    // Wait for animation to complete, then show next profile
     setTimeout(() => {
-      if (currentIndex + 1 < profiles.length) {
-        setCurrentIndex(prev => prev + 1);
-        setDirection(null);
-      } else {
-        setCurrentIndex(prev => prev + 1);
-      }
-    }, 300);
+      setCurrentIndex(prev => prev + 1);
+    }, 350);
   };
 
   const handleBuySwipes = async () => {
@@ -222,15 +233,14 @@ export default function Dating() {
 
         {/* Profile Card - Flex grow to fill space */}
         <div className="flex-1 flex items-center justify-center mb-3">
-          {currentIndex < profiles.length ? (
-            <animated.div 
-              key={currentIndex} 
-              style={cardSpring as any} 
-              className="w-full touch-none"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
+          <animated.div 
+            key={`profile-${currentIndex}`}
+            style={cardSpring as any} 
+            className="w-full touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
               <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
                 {/* Swipe indicators */}
                 {touchStart && touchMove && (
@@ -287,7 +297,6 @@ export default function Dating() {
               </div>
             </Card>
             </animated.div>
-          ) : null}
         </div>
 
         {/* Индикатор прогресса - Fixed at bottom */}
