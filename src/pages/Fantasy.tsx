@@ -22,7 +22,7 @@ const POSITION_LABELS = {
 };
 
 export default function Fantasy() {
-  const [budget] = useState(1200);
+  const [budget] = useState(1600);
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
 
   const availablePlayers: Player[] = [
@@ -93,19 +93,19 @@ export default function Fantasy() {
             <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
-                <p className="text-base sm:text-lg font-bold text-primary">${budget}</p>
+                <p className="text-base sm:text-lg font-bold text-primary">{budget} очков</p>
               </div>
             </Card>
             <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Потрачено</p>
-                <p className="text-base sm:text-lg font-bold text-red-500">${spentBudget}</p>
+                <p className="text-base sm:text-lg font-bold text-red-500">{spentBudget} очков</p>
               </div>
             </Card>
             <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-1">Осталось</p>
-                <p className="text-base sm:text-lg font-bold text-green-500">${remainingBudget}</p>
+                <p className="text-base sm:text-lg font-bold text-green-500">{remainingBudget} очков</p>
               </div>
             </Card>
           </div>
@@ -126,7 +126,7 @@ export default function Fantasy() {
                     <p className="font-semibold text-sm sm:text-base">{player.name}</p>
                     <p className="text-xs text-muted-foreground">{POSITION_LABELS[player.position]} • {player.team}</p>
                   </div>
-                  <p className="text-primary font-bold text-sm sm:text-base">${player.price}</p>
+                  <p className="text-primary font-bold text-sm sm:text-base">{player.price} очков</p>
                 </div>
               ))}
             </div>
@@ -166,7 +166,7 @@ export default function Fantasy() {
                   </div>
                   
                   <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                    <span className="text-primary font-bold text-sm sm:text-base">${player.price}</span>
+                    <span className="text-primary font-bold text-sm sm:text-base">{player.price} очков</span>
                     <Button
                       onClick={() => handleSelectPlayer(player)}
                       size="sm"
@@ -190,7 +190,7 @@ export default function Fantasy() {
         <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20">
           <h3 className="font-bold mb-2 sm:mb-3 text-sm sm:text-base">Правила фэнтези</h3>
           <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
-            <li>• Бюджет: 1200 монет</li>
+            <li>• Бюджет: 1600 очков</li>
             <li>• Выбери 3 игроков для своей команды</li>
             <li>• Очки начисляются за реальные действия игроков</li>
             <li>• Победитель получает призы!</li>

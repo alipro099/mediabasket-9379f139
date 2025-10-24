@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, X, Coins, ShoppingCart } from 'lucide-react';
+import { Heart, Coins, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,18 +66,31 @@ export default function Dating() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchMove, setTouchMove] = useState<{ x: number; y: number } | null>(null);
   const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
   const currentProfile = profiles[currentIndex];
+
+  const getDragTransform = () => {
+    if (!touchStart || !touchMove) return { x: 0, rotate: 0 };
+    const deltaX = touchMove.x - touchStart.x;
+    const rotate = deltaX / 20;
+    return { x: deltaX, rotate };
+  };
+
+  const drag = getDragTransform();
 
   const cardSpring = useSpring({
     transform: direction === 'left' 
       ? 'translateX(-150%) rotate(-20deg)' 
       : direction === 'right' 
       ? 'translateX(150%) rotate(20deg)' 
+      : touchStart && touchMove
+      ? `translateX(${drag.x}px) rotate(${drag.rotate}deg)`
       : 'translateX(0%) rotate(0deg)',
     opacity: direction ? 0 : 1,
-    config: { duration: 300 }
+    config: { duration: direction ? 300 : 0 }
   });
 
   const handleSwipe = async (liked: boolean) => {
@@ -111,6 +124,38 @@ export default function Dating() {
   const handleBuySwipes = async () => {
     hapticFeedback.light();
     await buySwipes();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (swipesAvailable === 0) return;
+    const touch = e.touches[0];
+    setTouchStart({ x: touch.clientX, y: touch.clientY });
+    setTouchMove({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart || swipesAvailable === 0) return;
+    const touch = e.touches[0];
+    setTouchMove({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchMove || swipesAvailable === 0) {
+      setTouchStart(null);
+      setTouchMove(null);
+      return;
+    }
+
+    const deltaX = touchMove.x - touchStart.x;
+    const threshold = 100;
+
+    if (Math.abs(deltaX) > threshold) {
+      const liked = deltaX > 0;
+      handleSwipe(liked);
+    }
+
+    setTouchStart(null);
+    setTouchMove(null);
   };
 
   if (currentIndex >= profiles.length) {
@@ -167,8 +212,31 @@ export default function Dating() {
         {/* Profile Card - Flex grow to fill space */}
         <div className="flex-1 flex items-center justify-center mb-3">
           {currentIndex < profiles.length ? (
-            <animated.div key={currentIndex} style={cardSpring as any} className="w-full">
+            <animated.div 
+              key={currentIndex} 
+              style={cardSpring as any} 
+              className="w-full touch-none"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
+                {/* Swipe indicators */}
+                {touchStart && touchMove && (
+                  <>
+                    {drag.x > 50 && (
+                      <div className="absolute top-8 right-8 z-10 bg-primary/90 text-black px-6 py-3 rounded-lg font-bold text-xl rotate-12 shadow-lg">
+                        ЛАЙК
+                      </div>
+                    )}
+                    {drag.x < -50 && (
+                      <div className="absolute top-8 left-8 z-10 bg-red-500/90 text-white px-6 py-3 rounded-lg font-bold text-xl -rotate-12 shadow-lg">
+                        НЕТ
+                      </div>
+                    )}
+                  </>
+                )}
+                
                 {/* Фото */}
                 <div className="relative h-[400px] sm:h-96 overflow-hidden">
                 <img 
@@ -211,27 +279,8 @@ export default function Dating() {
           ) : null}
         </div>
 
-        {/* Кнопки действий - Fixed at bottom */}
+        {/* Индикатор прогресса - Fixed at bottom */}
         <div className="flex-shrink-0">
-          <div className="flex justify-center gap-6 sm:gap-8 mb-3">
-            <Button
-              onClick={() => handleSwipe(false)}
-              disabled={currentIndex >= profiles.length || swipesAvailable === 0}
-              size="lg"
-              className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
-            >
-              <X className="w-7 h-7 sm:w-9 sm:h-9" />
-            </Button>
-            <Button
-              onClick={() => handleSwipe(true)}
-              disabled={currentIndex >= profiles.length || swipesAvailable === 0}
-              size="lg"
-              className="rounded-full w-16 h-16 sm:w-20 sm:h-20 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
-            >
-              <Heart className="w-7 h-7 sm:w-9 sm:h-9" />
-            </Button>
-          </div>
-
           {/* Индикатор прогресса */}
           <div className="flex justify-center gap-1">
             {profiles.map((_, idx) => (

@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
-import basketballHoop from '@/assets/basketball-hoop.jpg';
+import backboardImage from '@/assets/backboard.jpg';
+import hoopNetImage from '@/assets/hoop-net.webp';
 import greenBasketball from '@/assets/green-basketball.webp';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,8 @@ export default function Game() {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const animationFrameRef = useRef<number>();
   const ballImageRef = useRef<HTMLImageElement | null>(null);
-  const hoopImageRef = useRef<HTMLImageElement | null>(null);
+  const backboardImageRef = useRef<HTMLImageElement | null>(null);
+  const hoopNetImageRef = useRef<HTMLImageElement | null>(null);
 
   const GRAVITY = 0.6;
   const BOUNCE_FACTOR = 0.5;
@@ -49,10 +51,16 @@ export default function Game() {
       ballImageRef.current = ballImg;
     };
 
-    const hoopImg = new Image();
-    hoopImg.src = basketballHoop;
-    hoopImg.onload = () => {
-      hoopImageRef.current = hoopImg;
+    const backboardImg = new Image();
+    backboardImg.src = backboardImage;
+    backboardImg.onload = () => {
+      backboardImageRef.current = backboardImg;
+    };
+
+    const hoopNetImg = new Image();
+    hoopNetImg.src = hoopNetImage;
+    hoopNetImg.onload = () => {
+      hoopNetImageRef.current = hoopNetImg;
     };
 
     const canvas = canvasRef.current;
@@ -170,7 +178,7 @@ export default function Game() {
   const drawHoop = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
     const hoop = hoopRef.current;
     
-    if (hoopImageRef.current) {
+    if (backboardImageRef.current) {
       ctx.save();
       
       ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
@@ -178,7 +186,7 @@ export default function Game() {
       ctx.shadowOffsetY = 10;
       
       ctx.drawImage(
-        hoopImageRef.current,
+        backboardImageRef.current,
         hoop.x - hoop.backboardWidth / 2,
         hoop.y - hoop.backboardHeight,
         hoop.backboardWidth,
@@ -186,23 +194,23 @@ export default function Game() {
       );
       
       ctx.restore();
-      
+    }
+    
+    if (hoopNetImageRef.current) {
       ctx.save();
-      ctx.fillStyle = '#00FF66';
-      ctx.shadowColor = '#00FF66';
-      ctx.shadowBlur = 15;
-      ctx.fillRect(hoop.x - hoop.width / 2, hoop.y, hoop.width, hoop.height);
-      ctx.restore();
       
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < 10; i++) {
-        const x = hoop.x - hoop.width / 2 + (i / 9) * hoop.width;
-        ctx.beginPath();
-        ctx.moveTo(x, hoop.y + hoop.height);
-        ctx.lineTo(x + Math.sin(i) * 3, hoop.y + hoop.height + 50);
-        ctx.stroke();
-      }
+      const netWidth = hoop.width;
+      const netHeight = hoop.width * 0.8;
+      
+      ctx.drawImage(
+        hoopNetImageRef.current,
+        hoop.x - netWidth / 2,
+        hoop.y - 10,
+        netWidth,
+        netHeight
+      );
+      
+      ctx.restore();
     }
   };
 
