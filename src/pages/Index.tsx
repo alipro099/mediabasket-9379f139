@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initTelegram } from '@/lib/telegram';
 import { Card } from '@/components/ui/card';
-import { Calendar, MapPin } from 'lucide-react';
+import { Calendar, MapPin, Youtube, Send, Instagram, ShoppingBag } from 'lucide-react';
 import seasonLogo from '@/assets/season-logo.jpg';
 import LoadingScreen from '@/components/LoadingScreen';
 
@@ -43,6 +43,68 @@ export default function Index() {
           <div>
             <h1 className="text-4xl font-bold neon-text">MEDIA BASKET</h1>
             <p className="text-primary text-lg font-semibold">Сезон 6 • Осень 2025</p>
+          </div>
+        </div>
+
+        {/* Медиа и мерч */}
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-foreground">Медиа</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <a 
+              href="https://youtube.com/@mediabasket" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <Youtube className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold">YouTube</span>
+                </div>
+              </Card>
+            </a>
+            
+            <a 
+              href="https://t.me/mediabasket" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <Send className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold">Telegram</span>
+                </div>
+              </Card>
+            </a>
+            
+            <a 
+              href="https://instagram.com/mediabasket" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <Instagram className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold">Instagram</span>
+                </div>
+              </Card>
+            </a>
+            
+            <a 
+              href="https://mediabasket.store" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group"
+            >
+              <Card className="p-4 bg-card/50 backdrop-blur border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <ShoppingBag className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold">Мерч</span>
+                </div>
+              </Card>
+            </a>
           </div>
         </div>
 

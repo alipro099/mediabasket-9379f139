@@ -1,41 +1,58 @@
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ClipboardList } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
+import basketballHoop from '@/assets/basketball-hoop.jpg';
+import greenBasketball from '@/assets/green-basketball.png';
 
 export default function Game() {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
-  const [combo, setCombo] = useState(0);
   
   const ballRef = useRef({
     x: 0,
     y: 0,
     vx: 0,
     vy: 0,
-    radius: 35,
+    radius: 30,
     isDragging: false,
     isFlying: false
   });
   
+  const hoopRef = useRef({
+    x: 0,
+    y: 150,
+    width: 140,
+    height: 20,
+    backboardWidth: 200,
+    backboardHeight: 120
+  });
+  
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const animationFrameRef = useRef<number>();
+  const ballImageRef = useRef<HTMLImageElement | null>(null);
+  const hoopImageRef = useRef<HTMLImageElement | null>(null);
 
-  const BALL_RADIUS = 40;
-  const HOOP_X = 0.5;
-  const HOOP_Y = 200;
-  const HOOP_WIDTH = 120;
-  const HOOP_HEIGHT = 18;
-  const BACKBOARD_WIDTH = 160;
-  const BACKBOARD_HEIGHT = 110;
-  const GRAVITY = 0.5;
-
+  const GRAVITY = 0.6;
+  const BOUNCE_FACTOR = 0.5;
+  const FRICTION = 0.98;
 
   useEffect(() => {
+    // Загрузка изображений
+    const ballImg = new Image();
+    ballImg.src = greenBasketball;
+    ballImg.onload = () => {
+      ballImageRef.current = ballImg;
+    };
+
+    const hoopImg = new Image();
+    hoopImg.src = basketballHoop;
+    hoopImg.onload = () => {
+      hoopImageRef.current = hoopImg;
+    };
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -45,9 +62,11 @@ export default function Game() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       
+      hoopRef.current.x = canvas.width / 2;
+      
       if (!ballRef.current.isFlying) {
         ballRef.current.x = canvas.width / 2;
-        ballRef.current.y = canvas.height - 100;
+        ballRef.current.y = canvas.height - 120;
       }
     };
     
@@ -57,37 +76,77 @@ export default function Game() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Фон
       const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      bgGradient.addColorStop(0, '#0a1f0a');
-      bgGradient.addColorStop(1, '#000000');
+      bgGradient.addColorStop(0, '#1a2a1a');
+      bgGradient.addColorStop(1, '#0a0f0a');
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      drawHoop(ctx, canvas.width);
+      // Рисуем кольцо
+      drawHoop(ctx, canvas.width, canvas.height);
 
+      // Физика мяча
       if (ballRef.current.isFlying) {
         ballRef.current.vy += GRAVITY;
         ballRef.current.x += ballRef.current.vx;
         ballRef.current.y += ballRef.current.vy;
+        ballRef.current.vx *= FRICTION;
 
-        const hoopCenterX = canvas.width * HOOP_X;
-        const hoopLeft = hoopCenterX - HOOP_WIDTH / 2;
-        const hoopRight = hoopCenterX + HOOP_WIDTH / 2;
+        const hoop = hoopRef.current;
+        const ball = ballRef.current;
 
-        if (
-          ballRef.current.y >= HOOP_Y - 10 &&
-          ballRef.current.y <= HOOP_Y + 40 &&
-          ballRef.current.x > hoopLeft + 10 &&
-          ballRef.current.x < hoopRight - 10 &&
-          ballRef.current.vy > 0
-        ) {
+        // Отскок от щита
+        const backboardLeft = hoop.x - hoop.backboardWidth / 2;
+        const backboardRight = hoop.x + hoop.backboardWidth / 2;
+        const backboardTop = hoop.y - hoop.backboardHeight;
+        const backboardBottom = hoop.y;
+
+        if (ball.x + ball.radius > backboardLeft && 
+            ball.x - ball.radius < backboardRight &&
+            ball.y - ball.radius < backboardBottom &&
+            ball.y - ball.radius > backboardTop) {
+          if (ball.x < backboardLeft + 20 || ball.x > backboardRight - 20) {
+            ball.vx = -ball.vx * BOUNCE_FACTOR;
+            ball.x = ball.x < hoop.x ? backboardLeft - ball.radius : backboardRight + ball.radius;
+            hapticFeedback.light();
+          }
+        }
+
+        // Отскок от кольца
+        const hoopLeft = hoop.x - hoop.width / 2;
+        const hoopRight = hoop.x + hoop.width / 2;
+        const hoopTop = hoop.y;
+        const hoopBottom = hoop.y + hoop.height;
+
+        // Проверка попадания в корзину
+        if (ball.y > hoopTop && ball.y < hoopTop + 50 &&
+            ball.x > hoopLeft + 15 && ball.x < hoopRight - 15 &&
+            ball.vy > 0) {
           handleScore(true);
           resetBall();
         }
 
-        if (ballRef.current.y > canvas.height + 100) {
+        // Отскок от обода
+        if (ball.y + ball.radius > hoopTop && 
+            ball.y - ball.radius < hoopBottom &&
+            ((ball.x + ball.radius > hoopLeft && ball.x < hoopLeft + 20) ||
+             (ball.x - ball.radius < hoopRight && ball.x > hoopRight - 20))) {
+          ball.vy = -ball.vy * BOUNCE_FACTOR;
+          ball.vx = ball.vx * BOUNCE_FACTOR;
+          hapticFeedback.medium();
+        }
+
+        // Выход за пределы экрана
+        if (ball.y > canvas.height + 100) {
           handleScore(false);
           resetBall();
+        }
+
+        // Боковые границы
+        if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
+          ball.vx = -ball.vx * BOUNCE_FACTOR;
+          ball.x = ball.x < canvas.width / 2 ? ball.radius : canvas.width - ball.radius;
         }
       }
 
@@ -108,148 +167,89 @@ export default function Game() {
     if (!canvas) return;
     
     ballRef.current.x = canvas.width / 2;
-    ballRef.current.y = canvas.height - 100;
+    ballRef.current.y = canvas.height - 120;
     ballRef.current.vx = 0;
     ballRef.current.vy = 0;
     ballRef.current.isFlying = false;
     ballRef.current.isDragging = false;
   };
 
-
-  const drawHoop = (ctx: CanvasRenderingContext2D, width: number) => {
-    const hoopX = width * HOOP_X;
-
-    // Backboard
-    ctx.save();
-    const bgGrad = ctx.createLinearGradient(
-      hoopX - BACKBOARD_WIDTH / 2, HOOP_Y - BACKBOARD_HEIGHT - 20,
-      hoopX + BACKBOARD_WIDTH / 2, HOOP_Y - 20
-    );
-    bgGrad.addColorStop(0, '#4A9FD8');
-    bgGrad.addColorStop(0.5, '#5AB4E8');
-    bgGrad.addColorStop(1, '#4A9FD8');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(
-      hoopX - BACKBOARD_WIDTH / 2,
-      HOOP_Y - BACKBOARD_HEIGHT - 20,
-      BACKBOARD_WIDTH,
-      BACKBOARD_HEIGHT
-    );
-
-    // Orange border
-    ctx.strokeStyle = '#FF6B35';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(
-      hoopX - BACKBOARD_WIDTH / 2,
-      HOOP_Y - BACKBOARD_HEIGHT - 20,
-      BACKBOARD_WIDTH,
-      BACKBOARD_HEIGHT
-    );
-    ctx.restore();
-
-    // Yellow hoop rectangle
-    ctx.save();
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.roundRect(
-      hoopX - HOOP_WIDTH / 2 + 10,
-      HOOP_Y - 40,
-      HOOP_WIDTH - 20,
-      50,
-      8
-    );
-    ctx.stroke();
-    ctx.restore();
-
-    // Orange hoop base
-    ctx.save();
-    ctx.fillStyle = '#FF6B35';
-    ctx.fillRect(
-      hoopX - HOOP_WIDTH / 2,
-      HOOP_Y,
-      HOOP_WIDTH,
-      HOOP_HEIGHT
-    );
-    ctx.restore();
-
-    // White net
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.lineWidth = 2.5;
-    for (let i = 0; i < 12; i++) {
-      const x = hoopX - HOOP_WIDTH / 2 + (i / 11) * HOOP_WIDTH;
-      ctx.beginPath();
-      ctx.moveTo(x, HOOP_Y + HOOP_HEIGHT);
-      ctx.lineTo(x + Math.sin(i) * 5, HOOP_Y + HOOP_HEIGHT + 60);
-      ctx.stroke();
+  const drawHoop = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const hoop = hoopRef.current;
+    
+    if (hoopImageRef.current) {
+      ctx.save();
+      
+      // Щит с изображением
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = 20;
+      ctx.shadowOffsetY = 10;
+      
+      ctx.drawImage(
+        hoopImageRef.current,
+        hoop.x - hoop.backboardWidth / 2,
+        hoop.y - hoop.backboardHeight,
+        hoop.backboardWidth,
+        hoop.backboardHeight
+      );
+      
+      ctx.restore();
+      
+      // Обод кольца
+      ctx.save();
+      ctx.fillStyle = '#00FF66';
+      ctx.shadowColor = '#00FF66';
+      ctx.shadowBlur = 15;
+      ctx.fillRect(hoop.x - hoop.width / 2, hoop.y, hoop.width, hoop.height);
+      ctx.restore();
+      
+      // Сетка
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 10; i++) {
+        const x = hoop.x - hoop.width / 2 + (i / 9) * hoop.width;
+        ctx.beginPath();
+        ctx.moveTo(x, hoop.y + hoop.height);
+        ctx.lineTo(x + Math.sin(i) * 3, hoop.y + hoop.height + 50);
+        ctx.stroke();
+      }
     }
   };
 
   const drawBall = (ctx: CanvasRenderingContext2D) => {
     const ball = ballRef.current;
-    ctx.save();
-
-    // Shadow
-    if (!ball.isFlying) {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      ctx.shadowBlur = 20;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 15;
+    
+    if (ballImageRef.current) {
+      ctx.save();
+      
+      if (!ball.isFlying) {
+        ctx.shadowColor = 'rgba(0, 255, 102, 0.6)';
+        ctx.shadowBlur = 20;
+        ctx.shadowOffsetY = 10;
+      }
+      
+      ctx.drawImage(
+        ballImageRef.current,
+        ball.x - ball.radius,
+        ball.y - ball.radius,
+        ball.radius * 2,
+        ball.radius * 2
+      );
+      
+      ctx.restore();
     }
-
-    // Orange basketball
-    const grad = ctx.createRadialGradient(
-      ball.x - 12, ball.y - 12, 5,
-      ball.x, ball.y, ball.radius
-    );
-    grad.addColorStop(0, '#FF8C42');
-    grad.addColorStop(1, '#D2691E');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Basketball lines
-    ctx.strokeStyle = '#8B4513';
-    ctx.lineWidth = 3;
-    
-    // Horizontal line
-    ctx.beginPath();
-    ctx.moveTo(ball.x - ball.radius + 5, ball.y);
-    ctx.lineTo(ball.x + ball.radius - 5, ball.y);
-    ctx.stroke();
-    
-    // Vertical line
-    ctx.beginPath();
-    ctx.moveTo(ball.x, ball.y - ball.radius + 5);
-    ctx.lineTo(ball.x, ball.y + ball.radius - 5);
-    ctx.stroke();
-    
-    // Curved lines
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius * 0.6, -Math.PI / 2, Math.PI / 2);
-    ctx.stroke();
-    
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius * 0.6, Math.PI / 2, -Math.PI / 2);
-    ctx.stroke();
-
-    ctx.restore();
   };
 
   const handleScore = (success: boolean) => {
     if (success) {
-      const newScore = score + 2;
-      const newCombo = combo + 1;
+      const newScore = score + 1;
       setScore(newScore);
-      setCombo(newCombo);
       hapticFeedback.success();
       
-      toast.success(newCombo > 1 ? `🔥 ${newCombo}x КОМБО! +2` : '🏀 +2', {
+      toast.success('🏀 SCORE +1', {
         duration: 1200,
       });
     } else {
-      setCombo(0);
       hapticFeedback.error();
       toast.error('Мимо', { duration: 800 });
     }
@@ -301,7 +301,7 @@ export default function Game() {
     const time = (Date.now() - touchStartRef.current.time) / 1000;
 
     if (dist > 20 && time > 0) {
-      const power = Math.min(dist / time / 50, 25);
+      const power = Math.min(dist / time / 40, 30);
       ballRef.current.vx = (dx / dist) * power;
       ballRef.current.vy = (dy / dist) * power;
       ballRef.current.isFlying = true;
@@ -316,33 +316,13 @@ export default function Game() {
     <div className="fixed inset-0 bg-background overflow-hidden">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 p-3 bg-gradient-to-b from-black/95 via-black/70 to-transparent pointer-events-none">
-        <div className="flex items-center justify-between pointer-events-auto">
-          <Card className="px-4 py-2.5 bg-black/80 backdrop-blur-sm border-primary/40 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Счёт</p>
-                <p className="text-2xl font-black text-primary tabular-nums">{score}</p>
-              </div>
-              {combo > 1 && (
-                <>
-                  <div className="h-10 w-px bg-primary/30" />
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Комбо</p>
-                    <p className="text-2xl font-black text-orange-500 tabular-nums animate-pulse">{combo}x</p>
-                  </div>
-                </>
-              )}
+        <div className="flex items-center justify-center pointer-events-auto">
+          <Card className="px-6 py-3 bg-black/80 backdrop-blur-sm border-primary/40 shadow-[0_0_20px_rgba(0,255,102,0.4)]">
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Счёт</p>
+              <p className="text-4xl font-black text-primary tabular-nums">{score}</p>
             </div>
           </Card>
-
-          <Button 
-            size="lg"
-            onClick={() => navigate('/tasks')}
-            className="bg-gradient-to-r from-primary to-green-400 hover:from-green-400 hover:to-primary text-black font-bold shadow-[0_0_25px_rgba(34,197,94,0.6)] transition-all"
-          >
-            <ClipboardList className="w-5 h-5 mr-2" />
-            Задания
-          </Button>
         </div>
       </div>
 
