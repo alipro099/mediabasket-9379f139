@@ -6,10 +6,10 @@ import { hapticFeedback } from '@/lib/telegram';
 const tabs = [
   { icon: Home, label: 'Хаб', path: '/' },
   { icon: Gamepad2, label: 'Игра', path: '/game' },
+  { icon: ListTodo, label: 'Задания', path: '/tasks' },
   { icon: Trophy, label: 'Фэнтези', path: '/fantasy' },
   { icon: Heart, label: 'Мэтч', path: '/dating' },
   { icon: MessageCircle, label: 'Чат', path: '/chat' },
-  { icon: ListTodo, label: 'Задания', path: '/tasks' },
 ];
 
 export const Navigation = () => {
