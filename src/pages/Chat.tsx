@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
-import { Send, MessageCircle } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
-import { CoinsDisplay } from '@/components/CoinsDisplay';
 
 interface Message {
   id: string;
@@ -16,6 +16,7 @@ interface Message {
   created_at: string;
   profiles?: {
     username: string | null;
+    avatar_url: string | null;
     favorite_team: string | null;
   } | null;
 }
@@ -24,7 +25,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchMessages();
@@ -40,7 +41,7 @@ export default function Chat() {
       .from('chat_messages')
       .select(`
         *,
-        profiles!chat_messages_user_id_fkey (username, favorite_team)
+        profiles!chat_messages_user_id_fkey (username, avatar_url, favorite_team)
       `)
       .order('created_at', { ascending: true })
       .limit(100);
@@ -68,7 +69,7 @@ export default function Chat() {
             .from('chat_messages')
             .select(`
               *,
-              profiles!chat_messages_user_id_fkey (username, favorite_team)
+              profiles!chat_messages_user_id_fkey (username, avatar_url, favorite_team)
             `)
             .eq('id', payload.new.id)
             .single();
@@ -86,21 +87,13 @@ export default function Chat() {
   };
 
   const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newMessage.trim()) return;
-
-    const messageText = newMessage.trim();
-    if (messageText.length > 500) {
-      toast.error('Сообщение слишком длинное (максимум 500 символов)');
-      return;
-    }
 
     setIsLoading(true);
     hapticFeedback.light();
@@ -116,7 +109,7 @@ export default function Chat() {
         .from('chat_messages')
         .insert({
           user_id: user.id,
-          message: messageText,
+          message: newMessage.trim(),
         });
 
       if (error) throw error;
@@ -130,93 +123,70 @@ export default function Chat() {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-lg border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-xl">
-                <MessageCircle className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Трибуна</h1>
-                <p className="text-sm text-muted-foreground">
-                  {messages.length} сообщений
-                </p>
-              </div>
-            </div>
-            <CoinsDisplay />
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 pb-24 relative overflow-hidden">
+      {/* Фоновые эффекты */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_50%)]" />
 
-      {/* Messages */}
-      <div className="container mx-auto px-4 py-6">
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <ScrollArea className="h-[calc(100vh-280px)] p-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-                <MessageCircle className="w-16 h-16 mb-4 opacity-50" />
-                <p>Пока нет сообщений</p>
-                <p className="text-sm mt-2">Будьте первым!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div key={msg.id} className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-semibold text-sm">
-                        {msg.profiles?.username || 'Аноним'}
+      <div className="relative z-10 max-w-3xl mx-auto">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center">ЧАТ</h1>
+          <p className="text-center text-muted-foreground mt-2 text-sm sm:text-base">Общайся с другими игроками</p>
+        </div>
+
+        {/* Список сообщений */}
+        <Card className="bg-card/50 backdrop-blur border-primary/20">
+          <ScrollArea className="h-[calc(100vh-280px)] sm:h-[500px] p-3 sm:p-4">
+            <div className="space-y-3 sm:space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className="flex gap-2 sm:gap-3">
+                  <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-primary/30 flex-shrink-0">
+                    <AvatarImage src={message.profiles?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/20 text-primary text-xs sm:text-sm">
+                      {message.profiles?.username?.[0]?.toUpperCase() || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className="font-semibold text-xs sm:text-sm truncate">
+                        {message.profiles?.username || 'Аноним'}
                       </span>
-                      {msg.profiles?.favorite_team && (
-                        <span className="text-xs text-primary">
-                          {msg.profiles.favorite_team}
+                      {message.profiles?.favorite_team && (
+                        <span className="text-xs text-primary truncate">
+                          • {message.profiles.favorite_team}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground ml-auto">
-                        {formatTime(msg.created_at)}
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(message.created_at).toLocaleTimeString('ru-RU', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </span>
                     </div>
-                    <p className="text-foreground bg-secondary/30 rounded-lg px-3 py-2">
-                      {msg.message}
-                    </p>
+                    <p className="text-xs sm:text-sm text-foreground break-words">{message.message}</p>
                   </div>
-                ))}
-                <div ref={scrollRef} />
-              </div>
-            )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
           </ScrollArea>
         </Card>
 
-        {/* Input */}
-        <form onSubmit={handleSendMessage} className="mt-4">
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Напишите сообщение..."
-              maxLength={500}
-              disabled={isLoading}
-              className="flex-1"
-            />
-            <Button 
-              type="submit" 
-              disabled={!newMessage.trim() || isLoading}
-              size="icon"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground mt-2 text-right">
-            {newMessage.length}/500
-          </p>
+        {/* Форма отправки */}
+        <form onSubmit={handleSendMessage} className="mt-3 sm:mt-4 flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Напиши сообщение..."
+            className="flex-1 bg-card/50 border-primary/20 focus:border-primary text-sm sm:text-base"
+          />
+          <Button 
+            type="submit" 
+            disabled={!newMessage.trim() || isLoading}
+            className="bg-primary hover:bg-primary/90 text-black px-3 sm:px-4"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
         </form>
       </div>
     </div>

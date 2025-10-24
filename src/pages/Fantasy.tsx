@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Coins } from 'lucide-react';
-import { hapticFeedback } from '@/lib/telegram';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { hapticFeedback } from '@/lib/telegram';
+import { CheckCircle2, TrendingUp, Users } from 'lucide-react';
+import { CoinsDisplay } from '@/components/CoinsDisplay';
 
 interface Player {
   id: string;
@@ -21,11 +23,7 @@ const POSITION_LABELS = {
 
 export default function Fantasy() {
   const [budget] = useState(1600);
-  const [selectedPlayers, setSelectedPlayers] = useState<Record<string, Player | null>>({
-    professional: null,
-    mediaplayer: null,
-    media: null
-  });
+  const [selectedPlayers, setSelectedPlayers] = useState<Record<string, Player>>({});
 
   const availablePlayers: Player[] = [
     { id: '1', name: 'VUK', position: 'professional', team: 'AUF', price: 1000 },
@@ -42,16 +40,15 @@ export default function Fantasy() {
     0
   );
   const remainingBudget = budget - spentBudget;
-  const selectedCount = Object.values(selectedPlayers).filter(Boolean).length;
+  const selectedCount = Object.keys(selectedPlayers).length;
 
   const handleSelectPlayer = (player: Player) => {
     hapticFeedback.light();
 
     if (selectedPlayers[player.position]?.id === player.id) {
-      setSelectedPlayers(prev => ({
-        ...prev,
-        [player.position]: null
-      }));
+      const newPlayers = { ...selectedPlayers };
+      delete newPlayers[player.position];
+      setSelectedPlayers(newPlayers);
       toast.success('Игрок убран из команды');
       return;
     }
@@ -71,84 +68,107 @@ export default function Fantasy() {
   };
 
   return (
-    <div className="min-h-screen pb-20 px-4">
-      <header className="py-6">
-        <h1 className="text-2xl font-bold">Фэнтези</h1>
-        <p className="text-sm text-muted-foreground">Собери свою команду</p>
-      </header>
+    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 pb-24 relative overflow-hidden">
+      {/* Фоновые эффекты */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]" />
 
-      {/* Бюджет */}
-      <Card className="p-4 mb-6 bg-primary/10 border-primary/20">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">Остаток бюджета</span>
-          <span className="text-xs text-primary">из {budget}</span>
+      <div className="relative z-10 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex justify-end mb-4">
+            <CoinsDisplay />
+          </div>
+          
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-4">FANTASY</h1>
+          
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-1">Бюджет</p>
+                <p className="text-base sm:text-lg font-bold text-primary">${budget}</p>
+              </div>
+            </Card>
+            <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-1">Потрачено</p>
+                <p className="text-base sm:text-lg font-bold text-red-500">${spentBudget}</p>
+              </div>
+            </Card>
+            <Card className="p-2 sm:p-3 bg-card/50 backdrop-blur border-primary/20">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground mb-1">Осталось</p>
+                <p className="text-base sm:text-lg font-bold text-green-500">${remainingBudget}</p>
+              </div>
+            </Card>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Coins className="w-6 h-6 text-primary" />
-          <span className="text-3xl font-bold text-primary">{remainingBudget}</span>
-        </div>
-        <div className="mt-2 text-right">
-          <span className="text-xs text-primary font-medium">{selectedCount}/3 игроков</span>
-        </div>
-      </Card>
 
-      {/* Твоя команда */}
-      <Card className="p-6 mb-6 bg-gradient-to-br from-primary/20 to-primary/5 border-primary/20">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-bold">Твоя команда</h2>
-        </div>
-
-        <div className="space-y-3">
-          {Object.entries(POSITION_LABELS).map(([position, label]) => (
-            <div key={position} className="bg-card/50 p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground mb-1">{label}</p>
-              <p className="font-medium">
-                {selectedPlayers[position as keyof typeof selectedPlayers]?.name || 'Не выбран'}
-              </p>
+        {/* Моя команда */}
+        <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h2 className="text-lg sm:text-xl font-bold">Моя команда ({selectedCount}/5)</h2>
+          </div>
+          
+          {Object.entries(selectedPlayers).length > 0 ? (
+            <div className="space-y-2">
+              {Object.entries(selectedPlayers).map(([position, player]) => (
+                <div key={position} className="flex justify-between items-center p-2 sm:p-3 bg-primary/10 rounded-lg border border-primary/20">
+                  <div>
+                    <p className="font-semibold text-sm sm:text-base">{player.name}</p>
+                    <p className="text-xs text-muted-foreground">{POSITION_LABELS[position as keyof typeof POSITION_LABELS]} • {player.team}</p>
+                  </div>
+                  <p className="text-primary font-bold text-sm sm:text-base">${player.price}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          ) : (
+            <p className="text-center text-muted-foreground py-4 text-sm">Выбери игроков для своей команды</p>
+          )}
+        </Card>
 
-      {/* Доступные игроки */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-lg font-bold">⭐ Доступные игроки</span>
-        </div>
-
-        <div className="space-y-3">
+        {/* Доступные игроки */}
+        <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <h2 className="text-lg sm:text-xl font-bold">Доступные игроки</h2>
+          </div>
+          
           {availablePlayers.map((player) => {
             const isSelected = selectedPlayers[player.position]?.id === player.id;
             
             return (
               <Card 
-                key={player.id} 
-                className={`p-4 transition-all ${
+                key={player.id}
+                className={`p-3 sm:p-4 transition-all ${
                   isSelected 
                     ? 'bg-primary/20 border-primary' 
-                    : 'bg-card/80 border-border hover:border-primary/50'
+                    : 'bg-card/50 backdrop-blur border-primary/20 hover:border-primary'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-1">{player.name}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{POSITION_LABELS[player.position]}</span>
-                      <span>•</span>
-                      <span>{player.team}</span>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h3 className="text-base sm:text-lg font-bold">{player.name}</h3>
+                      <Badge variant="secondary" className="text-xs">
+                        {POSITION_LABELS[player.position]}
+                      </Badge>
                     </div>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{player.team}</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-primary px-2 py-1 bg-primary/10 rounded-full">
-                      {player.price}
-                    </span>
+                  
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <span className="text-primary font-bold text-sm sm:text-base">${player.price}</span>
                     <Button
-                      size="sm"
-                      variant={isSelected ? "default" : "outline"}
                       onClick={() => handleSelectPlayer(player)}
-                      className={isSelected ? "bg-primary hover:bg-primary/90" : ""}
+                      size="sm"
+                      className={
+                        isSelected
+                          ? 'bg-primary/20 text-primary cursor-default'
+                          : 'bg-primary hover:bg-primary/90 text-black'
+                      }
                     >
+                      {isSelected && <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />}
                       {isSelected ? 'Выбран' : 'Выбрать'}
                     </Button>
                   </div>
@@ -157,18 +177,18 @@ export default function Fantasy() {
             );
           })}
         </div>
-      </div>
 
-      {/* Правила */}
-      <Card className="p-4 bg-card/50">
-        <h3 className="font-bold mb-3">Правила фэнтези</h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>• Бюджет: 1600 монет</li>
-          <li>• Выбери 3 игроков: Профессионал, Медиаигрок, Медиа</li>
-          <li>• Очки начисляются за реальные действия игроков</li>
-          <li>• Победитель получает призы!</li>
-        </ul>
-      </Card>
+        {/* Правила */}
+        <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20">
+          <h3 className="font-bold mb-2 sm:mb-3 text-sm sm:text-base">Правила фэнтези</h3>
+          <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
+            <li>• Бюджет: 1600 монет</li>
+            <li>• Выбери игроков для своей команды</li>
+            <li>• Очки начисляются за реальные действия игроков</li>
+            <li>• Победитель получает призы!</li>
+          </ul>
+        </Card>
+      </div>
     </div>
   );
 }

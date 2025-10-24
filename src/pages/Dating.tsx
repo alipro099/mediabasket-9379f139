@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Heart, X, Coins, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Heart, X, MapPin, User, ArrowLeft, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
-import { useSpring, animated } from 'react-spring';
+import { animated, useSpring } from 'react-spring';
+import { useSwipes } from '@/hooks/useSwipes';
+import { CoinsDisplay } from '@/components/CoinsDisplay';
 
 interface UserProfile {
   id: number;
@@ -17,7 +19,7 @@ interface UserProfile {
   telegram: string;
 }
 
-const mockProfiles: UserProfile[] = [
+const profiles: UserProfile[] = [
   {
     id: 1,
     name: 'Алексей',
@@ -57,198 +59,191 @@ const mockProfiles: UserProfile[] = [
 ];
 
 export default function Dating() {
-  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [matches, setMatches] = useState<string[]>([]);
+  const [matches, setMatches] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
+  const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
-  const currentProfile = mockProfiles[currentIndex];
+  const currentProfile = profiles[currentIndex];
 
-  const [props, api] = useSpring(() => ({
-    x: 0,
-    rotation: 0,
-    config: { tension: 300, friction: 30 }
-  }));
+  const cardSpring = useSpring({
+    transform: direction === 'left' 
+      ? 'translateX(-150%) rotate(-20deg)' 
+      : direction === 'right' 
+      ? 'translateX(150%) rotate(20deg)' 
+      : 'translateX(0%) rotate(0deg)',
+    opacity: direction ? 0 : 1,
+    config: { duration: 300 }
+  });
 
-  const handleSwipe = (like: boolean) => {
-    if (!currentProfile) return;
+  const handleSwipe = async (liked: boolean) => {
+    const success = await useSwipe();
+    if (!success) return;
 
-    hapticFeedback.light();
-    setDirection(like ? 'right' : 'left');
+    setDirection(liked ? 'right' : 'left');
+    hapticFeedback.medium();
 
-    // Анимация свайпа
-    api.start({
-      x: like ? 400 : -400,
-      rotation: like ? 20 : -20,
-      config: { duration: 300 },
-      onRest: () => {
-        if (like) {
-          // Симуляция взаимного лайка (50% шанс)
-          const isMatch = Math.random() > 0.5;
-          if (isMatch) {
-            setMatches(prev => [...prev, currentProfile.telegram]);
-            toast.success(`🎉 Взаимный лайк! ${currentProfile.telegram}`, {
-              duration: 3000,
-            });
-            hapticFeedback.success();
-          } else {
-            toast('❤️ Лайк отправлен!', { duration: 1500 });
-          }
-        }
-
-        // Следующая карточка
-        if (currentIndex < mockProfiles.length - 1) {
-          setCurrentIndex(prev => prev + 1);
-        } else {
-          toast('Карточки закончились! 🎭', {
-            description: 'Загрузим больше участников позже',
-            duration: 2000,
+    setTimeout(() => {
+      if (liked) {
+        const isMatch = Math.random() > 0.7;
+        if (isMatch) {
+          setMatches(prev => prev + 1);
+          hapticFeedback.success();
+          toast.success('Это мэтч! 🎉', {
+            description: `${profiles[currentIndex].name} тоже лайкнул(а) тебя!`,
           });
-          setCurrentIndex(0);
+        } else {
+          toast('Лайк отправлен', {
+            description: 'Ждем взаимности...',
+          });
         }
-
-        // Сброс анимации
-        api.set({ x: 0, rotation: 0 });
-        setDirection(null);
       }
-    });
+      
+      setCurrentIndex(prev => prev + 1);
+      setDirection(null);
+    }, 300);
   };
 
-  if (!currentProfile) {
+  const handleBuySwipes = async () => {
+    hapticFeedback.light();
+    await buySwipes();
+  };
+
+  if (currentIndex >= profiles.length) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">Загрузка профилей...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 sm:px-6 pb-24">
+        <Card className="p-6 sm:p-8 text-center max-w-md">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
+          <p className="text-muted-foreground mb-4">Возвращайтесь позже за новыми знакомствами</p>
+          <Button onClick={() => setCurrentIndex(0)} className="bg-primary hover:bg-primary/90 text-black">
+            Начать сначала
+          </Button>
         </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-20 p-4 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/')}
-            className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-primary neon-text">ЗНАКОМСТВА</h1>
-            <p className="text-xs text-muted-foreground">Найди друзей по интересам</p>
+    <div className="min-h-screen bg-background px-4 sm:px-6 py-6 pb-24 relative overflow-hidden">
+      {/* Фоновые эффекты */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(236,72,153,0.1),transparent_50%)]" />
+
+      <div className="relative z-10 max-w-md mx-auto">
+        {/* Header */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <CoinsDisplay />
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+              <Heart className="w-4 h-4 text-primary fill-current" />
+              <span className="font-bold text-sm">Мэтчей: {matches}</span>
+            </div>
           </div>
-
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="rounded-full border-2 border-primary text-primary"
-          >
-            <Zap className="w-5 h-5" />
-          </Button>
+          
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">DATING</h1>
+          
+          {/* Swipes counter and buy button */}
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-card/50 rounded-full border border-primary/20">
+              <span className="text-sm font-semibold">Свайпов: {swipesAvailable}</span>
+            </div>
+            {swipesAvailable < 5 && (
+              <Button
+                onClick={handleBuySwipes}
+                disabled={!canBuySwipes}
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-black"
+              >
+                <ShoppingCart className="w-3 h-3 mr-1" />
+                Купить (100 <Coins className="w-3 h-3 inline" />)
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Matches Counter */}
-      {matches.length > 0 && (
-        <div className="absolute top-24 right-4 z-20">
-          <Card className="p-3 bg-primary text-black border-0">
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 fill-current" />
-              <span className="font-bold">{matches.length}</span>
-            </div>
-          </Card>
-        </div>
-      )}
+        {currentIndex < profiles.length ? (
+          <animated.div style={cardSpring as any}>
+            <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
+              {/* Фото */}
+              <div className="relative h-[400px] sm:h-96 overflow-hidden">
+                <img 
+                  src={currentProfile.photo} 
+                  alt={currentProfile.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+              </div>
 
-      {/* Карточки */}
-      <div className="flex items-center justify-center min-h-screen p-4 pt-32 pb-32">
-        <animated.div
-          style={props as any}
-          className="w-full max-w-md"
-        >
-          <Card className="relative overflow-hidden border-2 border-primary bg-card">
-            {/* Фото/Эмодзи профиля */}
-            <div className="h-96 bg-gradient-to-br from-primary/20 to-secondary flex items-center justify-center relative">
-              <div className="text-9xl">{currentProfile.photo}</div>
-              
-              {/* Индикатор свайпа */}
-              {direction === 'right' && (
-                <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
-                  <Heart className="w-32 h-32 text-primary animate-pulse" />
+              {/* Информация */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
+                <div className="mb-3">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-1">
+                    {currentProfile.name}, {currentProfile.age}
+                  </h2>
+                  <p className="text-xs sm:text-sm opacity-90 flex items-center gap-1">
+                    📍 {currentProfile.city}
+                  </p>
+                  <p className="text-xs sm:text-sm opacity-90 mt-1">
+                    ⚡️ {currentProfile.telegram}
+                  </p>
                 </div>
-              )}
-              {direction === 'left' && (
-                <div className="absolute inset-0 bg-destructive/40 flex items-center justify-center">
-                  <X className="w-32 h-32 text-destructive animate-pulse" />
+
+                {/* Интересы */}
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4">
+                  {currentProfile.interests.map((interest, idx) => (
+                    <Badge 
+                      key={idx}
+                      variant="secondary"
+                      className="bg-white/20 text-white border-white/30 text-xs"
+                    >
+                      {interest}
+                    </Badge>
+                  ))}
                 </div>
-              )}
-            </div>
-
-            {/* Информация */}
-            <div className="p-6 space-y-4">
-              <div>
-                <h2 className="text-3xl font-bold">
-                  {currentProfile.name}, {currentProfile.age}
-                </h2>
               </div>
-
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span>{currentProfile.city}</span>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {currentProfile.interests.map((interest, idx) => (
-                  <span 
-                    key={idx}
-                    className="px-3 py-1 bg-primary/20 text-primary text-sm rounded-full border border-primary"
-                  >
-                    {interest}
-                  </span>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="w-4 h-4" />
-                <span className="font-mono">{currentProfile.telegram}</span>
-              </div>
-            </div>
+            </Card>
+          </animated.div>
+        ) : (
+          <Card className="p-6 sm:p-8 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4">Профили закончились!</h2>
+            <p className="text-muted-foreground">Возвращайтесь позже за новыми знакомствами</p>
           </Card>
-        </animated.div>
-      </div>
+        )}
 
-      {/* Кнопки действий */}
-      <div className="absolute bottom-8 left-0 right-0 z-20 px-4">
-        <div className="max-w-md mx-auto flex justify-center gap-6">
-          <Button 
-            size="lg"
-            variant="outline"
-            className="w-20 h-20 rounded-full border-4 border-destructive text-destructive hover:bg-destructive hover:text-white"
+        {/* Кнопки действий */}
+        <div className="flex justify-center gap-4 sm:gap-6 mt-4 sm:mt-6">
+          <Button
             onClick={() => handleSwipe(false)}
-          >
-            <X className="w-8 h-8" />
-          </Button>
-
-          <Button 
+            disabled={currentIndex >= profiles.length || swipesAvailable === 0}
             size="lg"
-            className="w-24 h-24 rounded-full bg-primary hover:bg-primary/90 text-black border-4 border-primary shadow-[0_0_30px_rgba(34,197,94,0.5)]"
-            onClick={() => handleSwipe(true)}
+            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 bg-card/50 hover:bg-red-500 border-2 border-red-500 text-red-500 hover:text-white disabled:opacity-50"
           >
-            <Heart className="w-10 h-10 fill-current" />
+            <X className="w-6 h-6 sm:w-8 sm:h-8" />
+          </Button>
+          <Button
+            onClick={() => handleSwipe(true)}
+            disabled={currentIndex >= profiles.length || swipesAvailable === 0}
+            size="lg"
+            className="rounded-full w-14 h-14 sm:w-16 sm:h-16 bg-card/50 hover:bg-primary border-2 border-primary text-primary hover:text-black disabled:opacity-50"
+          >
+            <Heart className="w-6 h-6 sm:w-8 sm:h-8" />
           </Button>
         </div>
-      </div>
 
-      {/* Прогресс */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-        <p className="text-xs text-muted-foreground">
-          {currentIndex + 1} / {mockProfiles.length}
-        </p>
+        {/* Индикатор прогресса */}
+        <div className="mt-4 sm:mt-6 flex justify-center gap-1">
+          {profiles.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1 rounded-full transition-all ${
+                idx < currentIndex 
+                  ? 'w-6 sm:w-8 bg-primary' 
+                  : idx === currentIndex 
+                  ? 'w-8 sm:w-12 bg-primary' 
+                  : 'w-6 sm:w-8 bg-primary/20'
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
