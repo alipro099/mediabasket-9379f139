@@ -1,15 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
 import basketballHoop from '@/assets/basketball-hoop.jpg';
 import greenBasketball from '@/assets/green-basketball.png';
+import { RewardChest } from '@/components/RewardChest';
+import { CoinsDisplay } from '@/components/CoinsDisplay';
+import { useCoinsStore } from '@/stores/coinsStore';
+import { Button } from '@/components/ui/button';
+import { RotateCcw } from 'lucide-react';
 
 export default function Game() {
-  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
+  const [showChest, setShowChest] = useState(false);
+  const { addCoins } = useCoinsStore();
+  const [gamesPlayed, setGamesPlayed] = useState(0);
   
   const ballRef = useRef({
     x: 0,
@@ -40,7 +46,6 @@ export default function Game() {
   const FRICTION = 0.98;
 
   useEffect(() => {
-    // Загрузка изображений
     const ballImg = new Image();
     ballImg.src = greenBasketball;
     ballImg.onload = () => {
@@ -76,17 +81,14 @@ export default function Game() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Фон
       const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
       bgGradient.addColorStop(0, '#1a2a1a');
       bgGradient.addColorStop(1, '#0a0f0a');
       ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Рисуем кольцо
       drawHoop(ctx, canvas.width, canvas.height);
 
-      // Физика мяча
       if (ballRef.current.isFlying) {
         ballRef.current.vy += GRAVITY;
         ballRef.current.x += ballRef.current.vx;
@@ -96,7 +98,6 @@ export default function Game() {
         const hoop = hoopRef.current;
         const ball = ballRef.current;
 
-        // Отскок от щита
         const backboardLeft = hoop.x - hoop.backboardWidth / 2;
         const backboardRight = hoop.x + hoop.backboardWidth / 2;
         const backboardTop = hoop.y - hoop.backboardHeight;
@@ -113,13 +114,11 @@ export default function Game() {
           }
         }
 
-        // Отскок от кольца
         const hoopLeft = hoop.x - hoop.width / 2;
         const hoopRight = hoop.x + hoop.width / 2;
         const hoopTop = hoop.y;
         const hoopBottom = hoop.y + hoop.height;
 
-        // Проверка попадания в корзину
         if (ball.y > hoopTop && ball.y < hoopTop + 50 &&
             ball.x > hoopLeft + 15 && ball.x < hoopRight - 15 &&
             ball.vy > 0) {
@@ -127,7 +126,6 @@ export default function Game() {
           resetBall();
         }
 
-        // Отскок от обода
         if (ball.y + ball.radius > hoopTop && 
             ball.y - ball.radius < hoopBottom &&
             ((ball.x + ball.radius > hoopLeft && ball.x < hoopLeft + 20) ||
@@ -137,13 +135,11 @@ export default function Game() {
           hapticFeedback.medium();
         }
 
-        // Выход за пределы экрана
         if (ball.y > canvas.height + 100) {
           handleScore(false);
           resetBall();
         }
 
-        // Боковые границы
         if (ball.x - ball.radius < 0 || ball.x + ball.radius > canvas.width) {
           ball.vx = -ball.vx * BOUNCE_FACTOR;
           ball.x = ball.x < canvas.width / 2 ? ball.radius : canvas.width - ball.radius;
@@ -180,7 +176,6 @@ export default function Game() {
     if (hoopImageRef.current) {
       ctx.save();
       
-      // Щит с изображением
       ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
       ctx.shadowBlur = 20;
       ctx.shadowOffsetY = 10;
@@ -195,7 +190,6 @@ export default function Game() {
       
       ctx.restore();
       
-      // Обод кольца
       ctx.save();
       ctx.fillStyle = '#00FF66';
       ctx.shadowColor = '#00FF66';
@@ -203,7 +197,6 @@ export default function Game() {
       ctx.fillRect(hoop.x - hoop.width / 2, hoop.y, hoop.width, hoop.height);
       ctx.restore();
       
-      // Сетка
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.lineWidth = 2;
       for (let i = 0; i < 10; i++) {
@@ -251,8 +244,26 @@ export default function Game() {
       });
     } else {
       hapticFeedback.error();
-      toast.error('Мимо', { duration: 800 });
+      setGamesPlayed(prev => prev + 1);
+      
+      // Показываем сундук после каждой игры
+      setShowChest(true);
     }
+  };
+
+  const handleRewardClaimed = async (reward: any) => {
+    if (reward.type === 'coins') {
+      await addCoins(reward.amount, `Награда за игру (${score} очков)`);
+    } else {
+      toast.success(`Получен: ${reward.item}`, {
+        description: 'Доступен в вашем профиле'
+      });
+    }
+  };
+
+  const handleRestart = () => {
+    setScore(0);
+    resetBall();
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -316,13 +327,24 @@ export default function Game() {
     <div className="fixed inset-0 bg-background overflow-hidden">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 p-3 bg-gradient-to-b from-black/95 via-black/70 to-transparent pointer-events-none">
-        <div className="flex items-center justify-center pointer-events-auto">
+        <div className="flex items-center justify-between pointer-events-auto px-4">
+          <CoinsDisplay />
+          
           <Card className="px-6 py-3 bg-black/80 backdrop-blur-sm border-primary/40 shadow-[0_0_20px_rgba(0,255,102,0.4)]">
             <div className="text-center">
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Счёт</p>
               <p className="text-4xl font-black text-primary tabular-nums">{score}</p>
             </div>
           </Card>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRestart}
+            className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
+          >
+            <RotateCcw className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
@@ -333,6 +355,13 @@ export default function Game() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+      />
+
+      {/* Reward Chest */}
+      <RewardChest
+        isOpen={showChest}
+        onClose={() => setShowChest(false)}
+        onRewardClaimed={handleRewardClaimed}
       />
     </div>
   );

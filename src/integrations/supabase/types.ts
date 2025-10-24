@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chests: {
         Row: {
           id: string
@@ -52,6 +73,44 @@ export type Database = {
           user_b?: string
         }
         Relationships: []
+      }
+      fantasy_teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          player_ids: Json | null
+          points: number | null
+          season_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          player_ids?: Json | null
+          points?: number | null
+          season_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          player_ids?: Json | null
+          points?: number | null
+          season_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fantasy_teams_season_id_fkey"
+            columns: ["season_id"]
+            isOneToOne: false
+            referencedRelation: "seasons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       game_results: {
         Row: {
@@ -193,6 +252,38 @@ export type Database = {
           },
         ]
       }
+      private_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_id: string
+          message: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_id: string
+          message: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_id?: string
+          message?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_messages_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "dating_matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean | null
@@ -239,7 +330,9 @@ export type Database = {
           created_at: string
           dating_on: boolean | null
           fav_team: string | null
+          favorite_team: string | null
           id: string
+          swipes_available: number | null
           tg_id: string | null
           updated_at: string
           user_id: string
@@ -251,7 +344,9 @@ export type Database = {
           created_at?: string
           dating_on?: boolean | null
           fav_team?: string | null
+          favorite_team?: string | null
           id?: string
+          swipes_available?: number | null
           tg_id?: string | null
           updated_at?: string
           user_id: string
@@ -263,7 +358,9 @@ export type Database = {
           created_at?: string
           dating_on?: boolean | null
           fav_team?: string | null
+          favorite_team?: string | null
           id?: string
+          swipes_available?: number | null
           tg_id?: string | null
           updated_at?: string
           user_id?: string

@@ -8,6 +8,7 @@ import Game from "./pages/Game";
 import Fantasy from "./pages/Fantasy";
 import Dating from "./pages/Dating";
 import Tasks from "./pages/Tasks";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import { Navigation } from "./components/Navigation";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/fantasy" element={<Fantasy />} />
             <Route path="/dating" element={<Dating />} />
             <Route path="/tasks" element={<Tasks />} />
+            <Route path="/chat" element={<Chat />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
