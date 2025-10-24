@@ -8,9 +8,11 @@ import { RewardChest } from '@/components/RewardChest';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
 import { useCoinsStore } from '@/stores/coinsStore';
 import { Button } from '@/components/ui/button';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, CheckSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Game() {
+  const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [showChest, setShowChest] = useState(false);
@@ -29,7 +31,7 @@ export default function Game() {
   
   const hoopRef = useRef({
     x: 0,
-    y: 150,
+    y: 250,
     width: 140,
     height: 20,
     backboardWidth: 200,
@@ -337,14 +339,24 @@ export default function Game() {
             </div>
           </Card>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRestart}
-            className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/tasks')}
+              className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
+            >
+              <CheckSquare className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRestart}
+              className="rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-black"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 

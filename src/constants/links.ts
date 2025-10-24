@@ -1,8 +1,9 @@
 export const SOCIAL_LINKS = {
-  instagram: 'https://instagram.com/ligastavok_mediabasket',
-  telegram: 'https://t.me/mediabasket',
+  instagram: 'https://www.instagram.com/ligastavok_mediabasket',
+  telegram: 'https://t.me/ligastavok_mediabasket',
   ligastavokTelegram: 'https://t.me/ligastavok',
-  youtube: 'https://youtube.com/@mediabasket',
+  youtube: 'https://www.youtube.com/@ligastavok.mediasport',
+  vk: 'https://vk.com/ligastavok_mediabasket',
 } as const;
 
 export const PARTNER_LINKS = {

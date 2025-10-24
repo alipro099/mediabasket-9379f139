@@ -8,6 +8,10 @@ import { hapticFeedback } from '@/lib/telegram';
 import { animated, useSpring } from 'react-spring';
 import { useSwipes } from '@/hooks/useSwipes';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
+import profile1 from '@/assets/profile-1.jpg';
+import profile2 from '@/assets/profile-2.jpg';
+import profile3 from '@/assets/profile-3.jpg';
+import profile4 from '@/assets/profile-4.jpg';
 
 interface UserProfile {
   id: number;
@@ -22,39 +26,39 @@ interface UserProfile {
 const profiles: UserProfile[] = [
   {
     id: 1,
-    name: 'Алексей',
-    age: 25,
+    name: 'Анастасия',
+    age: 27,
     city: 'Москва',
-    interests: ['Баскетбол', 'NBA', 'Игры'],
-    photo: '🏀',
-    telegram: '@alexey_basket'
+    interests: ['Баскетбол', 'Мода', 'Путешествия'],
+    photo: profile1,
+    telegram: '@anastasia_basketball'
   },
   {
     id: 2,
-    name: 'Мария',
-    age: 23,
-    city: 'Санкт-Петербург',
-    interests: ['Баскетбол', 'Путешествия', 'Фотография'],
-    photo: '🌟',
-    telegram: '@maria_bball'
+    name: 'Элина',
+    age: 25,
+    city: 'Москва',
+    interests: ['NBA', 'Спорт', 'Музыка'],
+    photo: profile2,
+    telegram: '@elina_hoops'
   },
   {
     id: 3,
-    name: 'Дмитрий',
-    age: 28,
-    city: 'Казань',
-    interests: ['NBA', 'Фэнтези-спорт', 'Музыка'],
-    photo: '🎵',
-    telegram: '@dima_nba'
+    name: 'Полина',
+    age: 20,
+    city: 'Москва',
+    interests: ['Баскетбол', 'Кино', 'Стритбол'],
+    photo: profile3,
+    telegram: '@polina_sports'
   },
   {
     id: 4,
-    name: 'Анна',
-    age: 24,
-    city: 'Екатеринбург',
-    interests: ['Баскетбол', 'Кино', 'Кулинария'],
-    photo: '🎬',
-    telegram: '@anna_hoops'
+    name: 'Rish',
+    age: 20,
+    city: 'Москва',
+    interests: ['Стритбол', 'Фотография', 'Спорт'],
+    photo: profile4,
+    telegram: '@rish_streetball'
   }
 ];
 
@@ -139,7 +143,7 @@ export default function Dating() {
             </div>
           </div>
           
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">МЭТЧ</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-3">ЗНАКОМСТВО</h1>
           
           {/* Swipes counter and buy button */}
           <div className="flex items-center justify-center gap-3">

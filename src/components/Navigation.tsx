@@ -1,14 +1,13 @@
-import { Home, Gamepad2, Trophy, ListTodo, Users, MessageCircle } from 'lucide-react';
+import { Home, Gamepad2, Trophy, Users, MessageCircle, Heart } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { hapticFeedback } from '@/lib/telegram';
 
 const tabs = [
-  { icon: Home, label: 'Дом', path: '/' },
-  { icon: Trophy, label: 'Фэнтези', path: '/fantasy' },
+  { icon: Home, label: 'Хаб', path: '/' },
   { icon: Gamepad2, label: 'Игра', path: '/game' },
-  { icon: ListTodo, label: 'Задания', path: '/tasks' },
-  { icon: Users, label: 'Мэтч', path: '/dating' },
+  { icon: Trophy, label: 'Фэнтези', path: '/fantasy' },
+  { icon: Heart, label: 'Знакомство', path: '/dating' },
   { icon: MessageCircle, label: 'Чат', path: '/chat' },
 ];
 

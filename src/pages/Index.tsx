@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { initTelegram } from '@/lib/telegram';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Youtube, Send, Instagram, ShoppingBag, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Youtube, Send, Instagram, Ticket } from 'lucide-react';
+import { FaVk } from 'react-icons/fa';
 import seasonLogo from '@/assets/season-logo.jpg';
 import LoadingScreen from '@/components/LoadingScreen';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
@@ -20,9 +21,11 @@ export default function Index() {
   }
 
   const matches = [
-    { date: '24.10.2025', team1: 'Спартак', team2: 'Динамо', time: '19:00', venue: 'МСА Лужники' },
-    { date: '25.10.2025', team1: 'ЦСКА', team2: 'Зенит', time: '20:00', venue: 'ВТБ Арена' },
-    { date: '26.10.2025', team1: 'Локомотив', team2: 'Краснодар', time: '18:30', venue: 'РЖД Арена' },
+    { date: '25.10.2025', team1: 'AUF BASKETBALL CLUB', team2: 'FUNNY DANCE CREW X NILETTO', time: '09:45', venue: 'Media Basket Arena' },
+    { date: '25.10.2025', team1: 'HOOPS', team2: 'FLAVA', time: '10:45', venue: 'Media Basket Arena' },
+    { date: '25.10.2025', team1: 'БК 10', team2: 'Favela Basket', time: '11:45', venue: 'Media Basket Arena' },
+    { date: '25.10.2025', team1: 'FLAVA', team2: 'БК 10', time: '13:00', venue: 'Media Basket Arena' },
+    { date: '25.10.2025', team1: 'Underground Bizne$', team2: 'FUNNY DANCE CREW', time: '14:00', venue: 'Media Basket Arena' },
   ];
 
   return (
@@ -54,7 +57,7 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Медиа и мерч */}
+        {/* Медиа и VK */}
         <div className="space-y-4">
           <h2 className="text-xl sm:text-2xl font-bold text-foreground">Медиа</h2>
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -101,15 +104,15 @@ export default function Index() {
             </a>
             
             <a 
-              href={MERCH_LINK} 
+              href={SOCIAL_LINKS.vk} 
               target="_blank" 
               rel="noopener noreferrer"
               className="group"
             >
               <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20 hover:border-primary hover:bg-primary/10 transition-all cursor-pointer">
                 <div className="flex flex-col items-center gap-2">
-                  <ShoppingBag className="w-6 h-6 sm:w-8 sm:h-8 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-xs sm:text-sm font-semibold">Мерч</span>
+                  <FaVk className="w-6 h-6 sm:w-8 sm:h-8 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-xs sm:text-sm font-semibold">VK</span>
                 </div>
               </Card>
             </a>

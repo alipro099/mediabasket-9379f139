@@ -22,8 +22,8 @@ const POSITION_LABELS = {
 };
 
 export default function Fantasy() {
-  const [budget] = useState(1600);
-  const [selectedPlayers, setSelectedPlayers] = useState<Record<string, Player>>({});
+  const [budget] = useState(1200);
+  const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
 
   const availablePlayers: Player[] = [
     { id: '1', name: 'VUK', position: 'professional', team: 'AUF', price: 1000 },
@@ -33,23 +33,34 @@ export default function Fantasy() {
     { id: '5', name: 'PATRICK SANDER', position: 'media', team: 'AUF', price: 800 },
     { id: '6', name: 'SERGE', position: 'mediaplayer', team: 'AUF', price: 800 },
     { id: '7', name: 'ГАРИ', position: 'professional', team: 'GOATS', price: 800 },
+    { id: '8', name: 'АЛЕКС', position: 'media', team: 'FLAVA', price: 400 },
+    { id: '9', name: 'ДИМА', position: 'media', team: 'БК 10', price: 300 },
+    { id: '10', name: 'МАКСИМ', position: 'professional', team: 'HOOPS', price: 200 },
+    { id: '11', name: 'ИВАН', position: 'mediaplayer', team: 'Favela Basket', price: 100 },
   ];
 
-  const spentBudget = Object.values(selectedPlayers).reduce(
+  const spentBudget = selectedPlayers.reduce(
     (sum, player) => sum + (player?.price || 0),
     0
   );
   const remainingBudget = budget - spentBudget;
-  const selectedCount = Object.keys(selectedPlayers).length;
+  const selectedCount = selectedPlayers.length;
+  const MAX_PLAYERS = 3;
 
   const handleSelectPlayer = (player: Player) => {
     hapticFeedback.light();
 
-    if (selectedPlayers[player.position]?.id === player.id) {
-      const newPlayers = { ...selectedPlayers };
-      delete newPlayers[player.position];
-      setSelectedPlayers(newPlayers);
+    const isSelected = selectedPlayers.some(p => p.id === player.id);
+    
+    if (isSelected) {
+      setSelectedPlayers(prev => prev.filter(p => p.id !== player.id));
       toast.success('Игрок убран из команды');
+      return;
+    }
+
+    if (selectedCount >= MAX_PLAYERS) {
+      toast.error(`Максимум ${MAX_PLAYERS} игрока в команде!`);
+      hapticFeedback.error();
       return;
     }
 
@@ -59,10 +70,7 @@ export default function Fantasy() {
       return;
     }
 
-    setSelectedPlayers(prev => ({
-      ...prev,
-      [player.position]: player
-    }));
+    setSelectedPlayers(prev => [...prev, player]);
     toast.success(`${player.name} добавлен в команду!`);
     hapticFeedback.success();
   };
@@ -107,16 +115,16 @@ export default function Fantasy() {
         <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20 mb-4 sm:mb-6">
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
             <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <h2 className="text-lg sm:text-xl font-bold">Моя команда ({selectedCount}/5)</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Моя команда ({selectedCount}/{MAX_PLAYERS})</h2>
           </div>
           
-          {Object.entries(selectedPlayers).length > 0 ? (
+          {selectedPlayers.length > 0 ? (
             <div className="space-y-2">
-              {Object.entries(selectedPlayers).map(([position, player]) => (
-                <div key={position} className="flex justify-between items-center p-2 sm:p-3 bg-primary/10 rounded-lg border border-primary/20">
+              {selectedPlayers.map((player) => (
+                <div key={player.id} className="flex justify-between items-center p-2 sm:p-3 bg-primary/10 rounded-lg border border-primary/20">
                   <div>
                     <p className="font-semibold text-sm sm:text-base">{player.name}</p>
-                    <p className="text-xs text-muted-foreground">{POSITION_LABELS[position as keyof typeof POSITION_LABELS]} • {player.team}</p>
+                    <p className="text-xs text-muted-foreground">{POSITION_LABELS[player.position]} • {player.team}</p>
                   </div>
                   <p className="text-primary font-bold text-sm sm:text-base">${player.price}</p>
                 </div>
@@ -135,7 +143,7 @@ export default function Fantasy() {
           </div>
           
           {availablePlayers.map((player) => {
-            const isSelected = selectedPlayers[player.position]?.id === player.id;
+            const isSelected = selectedPlayers.some(p => p.id === player.id);
             
             return (
               <Card 
@@ -182,8 +190,8 @@ export default function Fantasy() {
         <Card className="p-3 sm:p-4 bg-card/50 backdrop-blur border-primary/20">
           <h3 className="font-bold mb-2 sm:mb-3 text-sm sm:text-base">Правила фэнтези</h3>
           <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
-            <li>• Бюджет: 1600 монет</li>
-            <li>• Выбери игроков для своей команды</li>
+            <li>• Бюджет: 1200 монет</li>
+            <li>• Выбери 3 игроков для своей команды</li>
             <li>• Очки начисляются за реальные действия игроков</li>
             <li>• Победитель получает призы!</li>
           </ul>
