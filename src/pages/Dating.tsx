@@ -11,6 +11,9 @@ import profile1 from '@/assets/profile-1.jpg';
 import profile2 from '@/assets/profile-2.jpg';
 import profile3 from '@/assets/profile-3.jpg';
 import profile4 from '@/assets/profile-4.jpg';
+import profile5 from '@/assets/profile-5.jpg';
+import profile6 from '@/assets/profile-6.jpg';
+import profile7 from '@/assets/profile-7.jpg';
 
 interface UserProfile {
   id: number;
@@ -58,6 +61,33 @@ const profiles: UserProfile[] = [
     interests: ['Стритбол', 'Фотография', 'Спорт'],
     photo: profile4,
     telegram: '@rish_streetball'
+  },
+  {
+    id: 5,
+    name: 'Дмитрий',
+    age: 24,
+    city: 'Москва',
+    interests: ['Баскетбол', 'Тренировки', 'Спорт'],
+    photo: profile5,
+    telegram: '@dmitry_hoops'
+  },
+  {
+    id: 6,
+    name: 'Виктория',
+    age: 23,
+    city: 'Москва',
+    interests: ['NBA', 'Баскетбол', 'Фитнес'],
+    photo: profile6,
+    telegram: '@vika_basketball'
+  },
+  {
+    id: 7,
+    name: 'Мария',
+    age: 26,
+    city: 'Москва',
+    interests: ['Баскетбол', 'Мода', 'Стиль'],
+    photo: profile7,
+    telegram: '@maria_style'
   }
 ];
 
@@ -83,9 +113,6 @@ export default function Dating() {
   const currentProfile = profiles[currentIndex];
 
   const handleLike = async () => {
-    const success = await useSwipe();
-    if (!success) return;
-
     hapticFeedback.medium();
     const isMatch = Math.random() > 0.7;
     
@@ -102,14 +129,13 @@ export default function Dating() {
     }
 
     setCurrentIndex(prev => prev + 1);
+    await useSwipe();
   };
 
   const handleDislike = async () => {
-    const success = await useSwipe();
-    if (!success) return;
-
     hapticFeedback.light();
     setCurrentIndex(prev => prev + 1);
+    await useSwipe();
   };
 
   const handleBuySwipes = async () => {
@@ -153,7 +179,7 @@ export default function Dating() {
         </div>
 
         {/* Profile Card - Flex grow to fill space */}
-        <div className="flex-1 flex flex-col items-center justify-center mb-3 pt-6">
+        <div className="flex-1 flex flex-col items-center justify-start mb-3 pt-2">
           <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30 w-full">
             {/* Фото */}
                 <div className="relative h-[400px] sm:h-96 overflow-hidden">
@@ -195,7 +221,7 @@ export default function Dating() {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 mt-6">
+          <div className="flex items-center justify-center gap-6 mt-3">
             <Button
               onClick={handleDislike}
               disabled={swipesAvailable === 0}
