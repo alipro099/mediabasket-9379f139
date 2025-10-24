@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Heart, Coins, ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, X, Check, Coins, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { hapticFeedback } from '@/lib/telegram';
-import { animated, useSpring } from 'react-spring';
 import { useSwipes } from '@/hooks/useSwipes';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
 import profile1 from '@/assets/profile-1.jpg';
@@ -65,9 +64,6 @@ const profiles: UserProfile[] = [
 export default function Dating() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState(0);
-  const [direction, setDirection] = useState<'left' | 'right' | null>(null);
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [touchMove, setTouchMove] = useState<{ x: number; y: number } | null>(null);
   const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
   if (currentIndex >= profiles.length) {
@@ -86,99 +82,39 @@ export default function Dating() {
 
   const currentProfile = profiles[currentIndex];
 
-  const getDragTransform = () => {
-    if (!touchStart || !touchMove) return { x: 0, rotate: 0 };
-    const deltaX = touchMove.x - touchStart.x;
-    const rotate = deltaX / 20;
-    return { x: deltaX, rotate };
-  };
-
-  const drag = getDragTransform();
-
-  const cardSpring = useSpring({
-    from: { transform: 'translateX(0%) rotate(0deg)', opacity: 1 },
-    to: {
-      transform: direction === 'left' 
-        ? 'translateX(-150%) rotate(-20deg)' 
-        : direction === 'right' 
-        ? 'translateX(150%) rotate(20deg)' 
-        : touchStart && touchMove
-        ? `translateX(${drag.x}px) rotate(${drag.rotate}deg)`
-        : 'translateX(0%) rotate(0deg)',
-      opacity: direction ? 0 : 1,
-    },
-    config: { duration: direction ? 300 : 0 },
-    immediate: !direction && !touchStart,
-    reset: true,
-    key: currentIndex
-  });
-
-  const handleSwipe = async (liked: boolean) => {
+  const handleLike = async () => {
     const success = await useSwipe();
     if (!success) return;
 
-    setDirection(liked ? 'right' : 'left');
     hapticFeedback.medium();
-
-    if (liked) {
-      const isMatch = Math.random() > 0.7;
-      if (isMatch) {
-        setMatches(prev => prev + 1);
-        hapticFeedback.success();
-        toast.success('Это мэтч! 🎉', {
-          description: `${currentProfile.name} тоже лайкнул(а) тебя!`,
-        });
-      } else {
-        toast('Лайк отправлен', {
-          description: 'Ждем взаимности...',
-        });
-      }
+    const isMatch = Math.random() > 0.7;
+    
+    if (isMatch) {
+      setMatches(prev => prev + 1);
+      hapticFeedback.success();
+      toast.success('Это мэтч! 🎉', {
+        description: `${currentProfile.name} тоже лайкнул(а) тебя!`,
+      });
+    } else {
+      toast('Лайк отправлен', {
+        description: 'Ждем взаимности...',
+      });
     }
 
-    // Wait for animation to complete, then show next profile
-    setTimeout(() => {
-      setDirection(null);
-      setTouchStart(null);
-      setTouchMove(null);
-      setCurrentIndex(prev => prev + 1);
-    }, 350);
+    setCurrentIndex(prev => prev + 1);
+  };
+
+  const handleDislike = async () => {
+    const success = await useSwipe();
+    if (!success) return;
+
+    hapticFeedback.light();
+    setCurrentIndex(prev => prev + 1);
   };
 
   const handleBuySwipes = async () => {
     hapticFeedback.light();
     await buySwipes();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (swipesAvailable === 0) return;
-    const touch = e.touches[0];
-    setTouchStart({ x: touch.clientX, y: touch.clientY });
-    setTouchMove({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart || swipesAvailable === 0) return;
-    const touch = e.touches[0];
-    setTouchMove({ x: touch.clientX, y: touch.clientY });
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchMove || swipesAvailable === 0) {
-      setTouchStart(null);
-      setTouchMove(null);
-      return;
-    }
-
-    const deltaX = touchMove.x - touchStart.x;
-    const threshold = 100;
-
-    if (Math.abs(deltaX) > threshold) {
-      const liked = deltaX > 0;
-      handleSwipe(liked);
-    } else {
-      setTouchStart(null);
-      setTouchMove(null);
-    }
   };
 
   return (
@@ -196,8 +132,6 @@ export default function Dating() {
               <span className="font-bold text-sm">Мэтчей: {matches}</span>
             </div>
           </div>
-          
-          <h1 className="text-2xl sm:text-3xl font-bold neon-text text-center mb-2">МЭТЧ</h1>
           
           {/* Swipes counter and buy button */}
           <div className="flex items-center justify-center gap-3">
@@ -219,33 +153,9 @@ export default function Dating() {
         </div>
 
         {/* Profile Card - Flex grow to fill space */}
-        <div className="flex-1 flex items-center justify-center mb-3">
-          <animated.div 
-            key={`profile-${currentIndex}`}
-            style={cardSpring as any} 
-            className="w-full touch-none"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-              <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30">
-                {/* Swipe indicators */}
-                {touchStart && touchMove && (
-                  <>
-                    {drag.x > 50 && (
-                      <div className="absolute top-8 right-8 z-10 bg-primary/90 text-black px-6 py-3 rounded-lg font-bold text-xl rotate-12 shadow-lg">
-                        ЛАЙК
-                      </div>
-                    )}
-                    {drag.x < -50 && (
-                      <div className="absolute top-8 left-8 z-10 bg-red-500/90 text-white px-6 py-3 rounded-lg font-bold text-xl -rotate-12 shadow-lg">
-                        НЕТ
-                      </div>
-                    )}
-                  </>
-                )}
-                
-                {/* Фото */}
+        <div className="flex-1 flex flex-col items-center justify-center mb-3 pt-6">
+          <Card className="relative overflow-hidden bg-card/50 backdrop-blur border-2 border-primary/30 w-full">
+            {/* Фото */}
                 <div className="relative h-[400px] sm:h-96 overflow-hidden">
                 <img 
                   src={currentProfile.photo} 
@@ -282,8 +192,29 @@ export default function Dating() {
                   ))}
                 </div>
               </div>
-            </Card>
-            </animated.div>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-center gap-6 mt-6">
+            <Button
+              onClick={handleDislike}
+              disabled={swipesAvailable === 0}
+              size="lg"
+              variant="outline"
+              className="w-16 h-16 rounded-full border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white disabled:opacity-50"
+            >
+              <X className="w-8 h-8" />
+            </Button>
+            
+            <Button
+              onClick={handleLike}
+              disabled={swipesAvailable === 0}
+              size="lg"
+              className="w-20 h-20 rounded-full bg-primary hover:bg-primary/90 text-black disabled:opacity-50"
+            >
+              <Check className="w-10 h-10" />
+            </Button>
+          </div>
         </div>
 
         {/* Индикатор прогресса - Fixed at bottom */}
