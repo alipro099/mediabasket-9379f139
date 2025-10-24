@@ -27,7 +27,7 @@ export default function Game() {
   
   const hoopRef = useRef({
     x: 0,
-    y: 350,
+    y: 280,
     width: 140,
     height: 20,
     backboardWidth: 200,

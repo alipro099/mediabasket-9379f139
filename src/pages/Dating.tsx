@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Coins, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -71,6 +71,13 @@ export default function Dating() {
   const { swipesAvailable, useSwipe, buySwipes, canBuySwipes } = useSwipes();
 
   const currentProfile = profiles[currentIndex];
+
+  // Reset card state when index changes
+  useEffect(() => {
+    setDirection(null);
+    setTouchStart(null);
+    setTouchMove(null);
+  }, [currentIndex]);
 
   const getDragTransform = () => {
     if (!touchStart || !touchMove) return { x: 0, rotate: 0 };
