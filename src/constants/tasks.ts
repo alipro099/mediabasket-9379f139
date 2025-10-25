@@ -24,7 +24,7 @@ export const TASKS: Task[] = [
     description: 'Подпишись на Telegram-канал Лига Ставок Медиа Баскет',
     reward: 200,
     type: 'social',
-    link: 'https://t.me/mediabasket',
+    link: 'https://t.me/ligastavok_mediabasket',
   },
   {
     id: '3',
