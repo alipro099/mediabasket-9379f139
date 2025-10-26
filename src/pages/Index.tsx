@@ -1,24 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { initTelegram } from '@/lib/telegram';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Youtube, Send, Instagram, Ticket } from 'lucide-react';
 import { FaVk } from 'react-icons/fa';
 import mediaBasketLogo from '@/assets/media-basket-logo.jpg';
-import LoadingScreen from '@/components/LoadingScreen';
 import { CoinsDisplay } from '@/components/CoinsDisplay';
 import { SOCIAL_LINKS, MERCH_LINK, TICKET_LINK } from '@/constants/links';
 
 export default function Index() {
-  const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     initTelegram();
   }, []);
-
-  if (isLoading) {
-    return <LoadingScreen onLoadComplete={() => setIsLoading(false)} />;
-  }
 
   const matches = [
     { date: '25.10.2025', team1: 'AUF BASKETBALL CLUB', team2: 'FUNNY DANCE CREW X NILETTO', time: '09:45', venue: 'Media Basket Arena' },
